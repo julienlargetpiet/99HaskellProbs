@@ -332,9 +332,10 @@ nGroup xs (n:ns) =
 lsort :: [[a]] -> [[a]]
 lsort [] = []
 lsort (x:xs) = 
-    let lowerxs = lsort [a | a <- xs, length a <= length x]
-        higherxs = lsort [a | a <- xs, length a > length x]
+    let lowerxs = lsort [a | a <- xs, length a <= l]
+        higherxs = lsort [a | a <- xs, length a > l]
     in lowerxs ++ [x] ++ higherxs
+    where l = length x
 
 --based on that quickSort impl
 
