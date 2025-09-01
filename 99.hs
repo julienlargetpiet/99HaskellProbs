@@ -327,7 +327,7 @@ nGroup xs (n:ns) =
 -- This is actually very smart, recursively eliminating already taken elements with custom rmFirstOccs, a little bit like combinations
 
 
--- 28
+-- 28.a
 
 lsort :: [[a]] -> [[a]]
 lsort [] = []
@@ -352,7 +352,23 @@ quickSortDesc (x:xs) =
         higherxs = quickSortDesc [a | a <- xs, a > x]
     in higherxs ++ [x] ++ lowerxs
 
+--28.b
 
+fsort :: [[a]] -> [[a]]
+fsort [] = []
+fsort (x:xs) = 
+    let lowerxs  = fsort [a | a <- xs, 
+                            (subFsort (x:xs) (length a) 0) <= f]
+        higherxs = fsort [a | a <- xs, 
+                            (subFsort (x:xs) (length a) 0) > f]
+    in lowerxs ++ [x] ++ higherxs
+    where f = subFsort xs (length x) 1
+
+subFsort :: [[a]] -> Int -> Int -> Int
+subFsort [] _ n = n
+subFsort (x:xs) cmp n
+    | length x == cmp = subFsort xs cmp (n + 1)
+    | otherwise = subFsort xs cmp n
 
 
 
