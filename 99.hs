@@ -516,10 +516,83 @@ subGoldbachList a b
     | a < b = (goldbach a):(subGoldbachList (a + 2) b)
     | otherwise = []
 
+--46
+
+myOr :: Bool -> Bool -> Bool
+myOr a b
+    | a = True
+    | b = True
+    | otherwise = False
+
+myAnd :: Bool -> Bool -> Bool
+myAnd a b
+    | a = b
+    | b = a
+    | otherwise = False
+
+myNor :: Bool -> Bool -> Bool
+myNor a b = not $ myOr a b
+
+myXor :: Bool -> Bool -> Bool
+myXor a b
+    | a /= b = True
+    | otherwise = False
+
+myImpl :: Bool -> Bool -> Bool
+myImpl a b
+    | a = b
+    | otherwise = b
+
+myXand :: Bool -> Bool -> Bool
+myXand a b
+    | a /= b = False
+    | otherwise = True
+
+myEqu :: Bool -> Bool -> Bool
+myEqu a b = myXand a b
+
+table :: (Bool -> Bool -> Bool) -> IO ()
+table f = mapM_ print [(a, b, f a b) | a <- [True, False], b <- [True, False]]
+
+-- 47
+
+--Already done
+
+-- 48
+
+myReplicate :: Int -> a -> [a]
+myReplicate 0 x = []
+myReplicate n x = x:(myReplicate (n - 1) x)
 
 
+--48 bis, (not existing but i want to create my own sequence)
 
+mySequenceIds :: [Int] -> [Int] -> Int -> [[Int]]
+mySequenceIds lxs ids idx
+    | idx == 0 = if val == (cmp - 1)
+                 then []
+                 else let newids = subMySequence 0 ids 0
+                      in mySequenceIds lxs newids (length lxs - 1)
+    | val < cmp - 1 = 
+        let newids = subMySequence idx ids 0
+        in  newids:(mySequenceIds lxs newids idx)
+    | otherwise = 
+        let newids = subMySequence2 idx ids 0
+        in  mySequenceIds lxs newids (idx - 1)
+    where val = (ids !! idx)
+          cmp = (lxs !! idx)
 
+subMySequence :: Int -> [Int] -> Int -> [Int]
+subMySequence _ [] _ = []
+subMySequence idx (x:xs) n = if idx /= n
+                             then x:(subMySequence idx xs (n + 1))
+                             else (x + 1):(subMySequence idx xs (n + 1))
+
+subMySequence2 :: Int -> [Int] -> Int -> [Int]
+subMySequence2 _ [] _ = []
+subMySequence2 idx (x:xs) n = if idx /= n
+                              then x:(subMySequence2 idx xs (n + 1))
+                              else (-1):(subMySequence2 idx xs (n + 1))
 
 
 
