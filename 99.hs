@@ -567,18 +567,39 @@ myReplicate n x = x:(myReplicate (n - 1) x)
 
 --48 bis, (not existing but i want to create my own sequence)
 
-mySequenceIds :: [Int] -> [Int] -> Int -> [[Int]]
-mySequenceIds lxs ids idx
+mySequence :: [[a]] -> [[a]]
+mySequence xs = 
+    let lxs = mySequencePrepareLength xs
+        ids = mySequencePrepareIds xs
+    in [mySequenceList xs lids | lids <- mySequenceIdsn lxs ids l]
+    where l = length xs - 1
+
+mySequenceList :: [[a]] -> [Int] -> [a]
+mySequenceList _ [] = []
+mySequenceList [] _ = []
+mySequenceList (x:xs) (idx:ids) = (x !! idx):(mySequenceList xs ids)
+
+mySequencePrepareLength :: [[a]] -> [Int]
+mySequencePrepareLength [] = []
+mySequencePrepareLength (x:xs) = (length x):(mySequencePrepareLength xs)
+
+mySequencePrepareIds :: [[a]] -> [Int]
+mySequencePrepareIds [_] = (-1):[]
+mySequencePrepareIds (_:xs) = 0:(mySequencePrepareIds xs)
+
+mySequenceIdsn :: [Int] -> [Int] -> Int -> [[Int]]
+mySequenceIdsn lxs ids idx
     | idx == 0 = if val == (cmp - 1)
                  then []
                  else let newids = subMySequence 0 ids 0
-                      in mySequenceIds lxs newids (length lxs - 1)
+                          newids2 = subMySequence2 (length lxs - 1) newids 0
+                      in mySequenceIdsn lxs newids2 (length lxs - 1)
     | val < cmp - 1 = 
         let newids = subMySequence idx ids 0
-        in  newids:(mySequenceIds lxs newids idx)
+        in  newids:(mySequenceIdsn lxs newids (length lxs - 1))
     | otherwise = 
-        let newids = subMySequence2 idx ids 0
-        in  mySequenceIds lxs newids (idx - 1)
+        let newids = subMySequence3 idx ids 0
+        in  mySequenceIdsn lxs newids (idx - 1)
     where val = (ids !! idx)
           cmp = (lxs !! idx)
 
@@ -594,13 +615,11 @@ subMySequence2 idx (x:xs) n = if idx /= n
                               then x:(subMySequence2 idx xs (n + 1))
                               else (-1):(subMySequence2 idx xs (n + 1))
 
-
-
-
-
-
-
-
+subMySequence3 :: Int -> [Int] -> Int -> [Int]
+subMySequence3 _ [] _ = []
+subMySequence3 idx (x:xs) n = if idx /= n
+                              then x:(subMySequence3 idx xs (n + 1))
+                              else 0:(subMySequence3 idx xs (n + 1))
 
 
 
