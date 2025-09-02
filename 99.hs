@@ -372,6 +372,151 @@ subFsort (x:xs) cmp n
     | otherwise = subFsort xs cmp n
 
 
+-- 31
+
+isPrime :: Int -> Bool
+isPrime x = subIsPrime x 2
+
+subIsPrime :: Int -> Int -> Bool
+subIsPrime x n 
+    | x > n = if x `mod` n == 0
+              then False
+              else subIsPrime x (n + 1)
+    | otherwise = if x /= 2
+                  then True
+                  else False
+
+-- 32
+
+myGCD :: Int -> Int -> Int
+myGCD a 0 = a
+myGCD a b = myGCD b (a `mod` b)
+
+-- 33
+
+coprime :: Int -> Int -> Bool
+coprime a b = (myGCD a b) == 1
+
+-- 34
+
+totient :: Int -> Int
+totient x = subTotient x x 1 
+
+subTotient :: Int -> Int -> Int -> Int
+subTotient 1 cmp n = n
+subTotient x cmp n
+    | coprime x cmp = subTotient (x - 1) cmp (n + 1)
+    | otherwise = subTotient (x - 1) cmp n
+
+
+-- 35
+
+primeFactors :: Int -> [Int]
+primeFactors x = 
+    let n = subPrimeFactor x 2
+    in if n /= x
+       then n:(primeFactors (x `div` n))
+       else n:[] 
+
+subPrimeFactor :: Int -> Int -> Int
+subPrimeFactor x n
+    | n == x = x
+    | x `mod` n /= 0 = subPrimeFactor x (n + 1)
+    | otherwise = if isPrime n
+                  then n
+                  else subPrimeFactor x (n + 1)
+
+-- 36
+
+primeFactorsMult :: Int -> [(Int, Int)]
+primeFactorsMult x = 
+    let ((f, x2), n) = subPrimeFactorMult x 2
+    in if n /= x && n /= 1
+       then (n, f):(primeFactorsMult x2)
+       else ((n, f):[])
+
+subPrimeFactorMult :: Int -> Int -> ((Int, Int), Int)
+subPrimeFactorMult x n
+    | n == x = ((1, 1), x)
+    | x `mod` n /= 0 = subPrimeFactorMult x (n + 1)
+    | otherwise = if isPrime n
+                  then (sub2PrimeFactorMult n (x `div` n) 1, n)
+                  else subPrimeFactorMult x (n + 1)
+
+sub2PrimeFactorMult :: Int -> Int -> Int -> (Int, Int)
+sub2PrimeFactorMult n x f
+    | x `mod` n == 0 = sub2PrimeFactorMult n (x `div` n) (f + 1)
+    | otherwise = (f, x)
+
+
+-- 37
+
+totient2 :: Int -> Int
+totient2 x = mult [(p - 1) * p ^ (m -1) | (p, m) <- primeFactorsMult x]
+
+mult :: (Num a) => [a] -> a
+mult [] = 1
+mult (x:xs) = x * (mult xs)
+
+
+-- 38 
+-- do it on your own
+
+
+-- 39
+
+primesR :: Int -> Int -> [Int]
+primesR a b
+    | a /= b = if isPrime a
+               then (a:(primesR (a + 1) b))
+               else primesR (a + 1) b
+    | otherwise = []
+
+-- 40
+
+goldbach :: Int -> (Int, Int)
+goldbach x = subGoldbach x 1 (subGoldbachDesc x)
+
+subGoldbach :: Int -> Int -> Int -> (Int, Int)
+subGoldbach x v1 v2 = 
+    let (newv1, newv2) = updateInterval v1 v2
+    in if (v1 + v2) == x
+       then (v1, v2)
+       else subGoldbach x newv1 newv2
+
+updateInterval :: Int -> Int -> (Int, Int)
+updateInterval v1 v2
+    | v1 == v2 = (1, subGoldbachDesc v2)
+    | otherwise = (subGoldbachAsc (v1 + 1) v2, v2)
+
+subGoldbachDesc :: Int -> Int
+subGoldbachDesc 1 = 1
+subGoldbachDesc x
+    | isPrime x = x
+    | otherwise = subGoldbachDesc (x - 1)
+
+subGoldbachAsc :: Int -> Int -> Int
+subGoldbachAsc x cmp
+    | x == cmp = cmp
+    | isPrime x = x
+    | otherwise = subGoldbachAsc (x + 1) cmp
+
+
+--41
+
+goldbachList :: Int -> Int -> [(Int, Int)]
+goldbachList a b =
+    let a2 = if a `mod` 2 == 0
+            then a
+            else a + 1
+    in subGoldbachList a2 b
+
+subGoldbachList :: Int -> Int -> [(Int, Int)]
+subGoldbachList a b
+    | a < b = (goldbach a):(subGoldbachList (a + 2) b)
+    | otherwise = []
+
+
 
 
 
