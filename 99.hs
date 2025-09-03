@@ -632,5 +632,12 @@ subMySequence3 idx (x:xs) n = if idx /= n
                               else 0:(subMySequence3 idx xs (n + 1))
 
 
+-- 49
+
+gray :: Int -> [[Char]]
+gray n = 
+    let xs = myReplicate n "10"
+    in mySequence xs
+
 
 
