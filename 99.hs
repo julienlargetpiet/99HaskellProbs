@@ -640,4 +640,154 @@ gray n =
     in mySequence xs
 
 
+-- 50
+
+myMin :: (Ord a) => [a] -> a
+myMin xs = subMyMin xs (head xs)
+
+subMyMin :: (Ord a) => [a] -> a -> a
+subMyMin [] cmp = cmp
+subMyMin (x:xs) cmp = 
+    let cmp2 = if cmp <= x
+              then cmp
+              else x
+    in subMyMin xs cmp2
+
+myMax :: (Ord a) => [a] -> a
+myMax xs = subMyMax xs (head xs)
+
+subMyMax :: (Ord a) => [a] -> a -> a
+subMyMax [] cmp = cmp
+subMyMax (x:xs) cmp = 
+    let cmp2 = if cmp >= x
+              then cmp
+              else x
+    in subMyMax xs cmp2
+
+myMinN :: (Ord a) => [a] -> Int -> [a]
+myMinN xs cmpn = subMyMinN xs 0 cmpn []
+
+subMyMinN :: (Ord a) => [a] -> Int -> Int -> [a] -> [a]
+subMyMinN [] _ _ xs2 = xs2
+subMyMinN xs n cmpn xs2
+    | n < cmpn = 
+        let val = myMin xs
+            ids = grepn2 val xs
+            newxs = deleteListElemn xs (reverse ids)
+            newxs2 = val:xs2
+        in subMyMinN newxs (n + 1) cmpn newxs2
+    | otherwise = xs2
+
+myMinN2 :: (Ord a) => [a] -> Int -> [a]
+myMinN2 xs cmpn = subMyMinN2 xs 0 cmpn []
+
+subMyMinN2 :: (Ord a) => [a] -> Int -> Int -> [a] -> [a]
+subMyMinN2 [] _ _ xs2 = xs2
+subMyMinN2 xs n cmpn xs2
+    | n < cmpn = 
+        let val = myMin xs
+            idx = match2 val xs
+            newxs = deleteListElem xs idx
+            newxs2 = val:xs2
+        in subMyMinN2 newxs (n + 1) cmpn newxs2
+    | otherwise = xs2
+
+match :: (Eq a) => a -> [a] -> Maybe Int
+match cmp xs = subMatch xs cmp 0
+
+subMatch :: (Eq a) => [a] -> a -> Int -> Maybe Int
+subMatch [] _ _ = Nothing
+subMatch (x:xs) cmp n
+    | x == cmp = Just n
+    | otherwise = subMatch xs cmp (n + 1)
+
+match2 :: (Eq a) => a -> [a] -> Int
+match2 cmp xs = subMatch2 xs cmp 0
+
+subMatch2 :: (Eq a) => [a] -> a -> Int -> Int
+subMatch2 [] _ _ = -1
+subMatch2 (x:xs) cmp n
+    | x == cmp = n
+    | otherwise = subMatch2 xs cmp (n + 1)
+
+deleteListElem :: [a] -> Int -> [a]
+deleteListElem xs n = subDeleteListElem xs n 0
+
+subDeleteListElem :: [a] -> Int -> Int -> [a]
+subDeleteListElem [] _ _ = []
+subDeleteListElem (x:xs) cmp n
+    | n /= cmp = x:(subDeleteListElem xs cmp (n + 1))
+    | otherwise = subDeleteListElem xs cmp (n + 1)
+
+deleteListElemn :: [a] -> [Int] -> [a]
+deleteListElemn xs nxs = subDeleteListElemn xs nxs 0
+
+subDeleteListElemn :: [a] -> [Int] -> Int -> [a]
+subDeleteListElemn xs [] _ = xs
+subDeleteListElemn xs (cmp:cmpxs) n = 
+    let newxs = subDeleteListElem xs (cmp - n) 0
+    in subDeleteListElemn newxs cmpxs (n + 1)
+
+myMinIdx :: (Ord a) => [a] -> (a, Int)
+myMinIdx xs = subMyMinIdx xs (head xs) 0 0
+
+subMyMinIdx :: (Ord a) => [a] -> a -> Int -> Int -> (a, Int)
+subMyMinIdx [] cmp n _ = (cmp, n)
+subMyMinIdx (x:xs) cmp n n2 = 
+    let (newcmp, newn) = if cmp <= x
+                         then (cmp, n)
+                         else (x, n2)
+    in subMyMinIdx xs newcmp newn (n2 + 1)
+
+grep :: (Eq a) => a -> [a] -> Maybe Int
+grep cmp xs = subGrep xs cmp 0
+
+subGrep :: (Eq a) => [a] -> a -> Int -> Maybe Int
+subGrep [] _ _ = Nothing
+subGrep (x:xs) cmp n
+    | cmp == x = Just n
+    | otherwise = subGrep xs cmp (n + 1)
+
+grepn :: (Eq a) => a -> [a] -> Maybe [Int]
+grepn cmp xs = subGrepn xs cmp 0 []
+
+subGrepn :: (Eq a) => [a] -> a -> Int -> [Int] -> Maybe [Int]
+subGrepn [] _ _ nxs = if null nxs then Nothing else Just nxs
+subGrepn (x:xs) cmp n nxs
+    | cmp == x  = subGrepn xs cmp (n + 1) (n:nxs)
+    | otherwise = subGrepn xs cmp (n + 1) nxs
+
+grepn2 :: (Eq a) => a -> [a] -> [Int]
+grepn2 cmp xs = subGrepn2 xs cmp 0 []
+
+subGrepn2 :: (Eq a) => [a] -> a -> Int -> [Int] -> [Int]
+subGrepn2 [] _ _ nxs = nxs
+subGrepn2 (x:xs) cmp n nxs
+    | cmp == x  = subGrepn2 xs cmp (n + 1) (n:nxs)
+    | otherwise = subGrepn2 xs cmp (n + 1) nxs
+
+data Tree a b = Leaf a b | Node a (Tree a b) (Tree a b) deriving (Show)
+
+--huffmanTree :: [(a, Int)] -> [(a, Char)]
+--huffmanTree xs = 
+--    let (fs, hs)  = subHuffmanTreePrepare xs [] []
+--    in subHuffmanTreeOut fs hs
+--
+--subHuffmanTreePrepare :: [(a, Int)] -> [Int] -> [(a, [Char])] 
+--                                -> ([Int], [(a, [Char])])
+--subHuffmanTreePrepare [] fs hs = (fs, hs)
+--subHuffmanTreePrepare (x:xs) fs hs = 
+--    let f   = snd x
+--        val = fst x
+--    in subHuffmanTreePrepare xs (f:fs) ((val, ""):hs)
+
+
+
+
+
+
+
+
+
+
 
