@@ -564,6 +564,16 @@ myReplicate :: Int -> a -> [a]
 myReplicate 0 x = []
 myReplicate n x = x:(myReplicate (n - 1) x)
 
+myReplicateM :: Int -> [a] -> [[a]]
+myReplicateM n xs = 
+    let newxs = myReplicate n xs
+    in mySequence newxs
+
+tablen :: Int -> ([Bool] -> Bool) -> IO ()
+tablen n f = mapM_ print [unwords (map showspe val) ++ " => " ++ show (f val) | val <- myReplicateM n [True, False]]
+    where showspe x = if x
+                      then "True "
+                      else "False"
 
 --48 bis, (not existing but i want to create my own sequence)
 
