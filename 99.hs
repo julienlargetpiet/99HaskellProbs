@@ -818,6 +818,10 @@ subGrepn2 (x:xs) cmp n nxs
     | cmp == x  = subGrepn2 xs cmp (n + 1) (n:nxs)
     | otherwise = subGrepn2 xs cmp (n + 1) nxs
 
+grepmn2 :: (Eq a) => [a] -> [a] -> [Int]
+grepmn2 [] _ = []
+grepmn2 (x2:xs2) xs = (grepn2 x2 xs) ++ (grepmn2 xs2 xs)
+
 isIn :: (Eq a) => a -> [a] -> Bool
 isIn _ [] = False
 isIn cmp (x:xs)
@@ -837,76 +841,123 @@ subCloserIdx :: (Num a, Ord a) => a -> [a] -> [a]
 subCloserIdx _ [] = []
 subCloserIdx cmp (x:xs) = (abs(cmp - x)):(subCloserIdx cmp xs)
 
-closerIdxSpe :: (Num a, Ord a) => a -> [Tree a Char [Char]] -> Int
+closerIdxSpe :: (Num a, Ord a) => a -> [(Tree a Char)] -> Int
 closerIdxSpe cmp xs = myMinIdx2 (subCloserIdxSpe cmp xs)
 
-subCloserIdxSpe :: (Num a, Ord a) => a -> [Tree a Char [Char]] -> [a]
+subCloserIdxSpe :: (Num a, Ord a) => a -> [(Tree a Char)] -> [a]
 subCloserIdxSpe _ [] = []
 subCloserIdxSpe cmp ((Node x _ _):xs) = (abs(cmp - x)):(subCloserIdxSpe cmp xs)
 
-data Tree a b c = Leaf a b c | Node a (Tree a b c) (Tree a b c) deriving (Show)
+getMins :: [Int] -> (Int, Int)
+getMins xs
+    | length xs == 2 = ((xs !! 0), (xs !! 1))
+    | length xs < 2  = ((xs !! 0), -1)
+    | otherwise      = (-1, -1)
 
-myTrees :: [Tree Int Char [Char]]
+--sortWith :: (Ord a, Eq a) => [a] -> [b] -> ([a], [b])
+--sortWith xs xs2 = 
+--    let newxs = quickSortAsc xs
+--        ids = grepn
+
+data Tree a b = Leaf b | Node a (Tree a b) (Tree a b) deriving (Show)
+
+myTrees :: [Tree Int Char]
 myTrees = [
-          Node 34  (Leaf 22 'A' "df") (Leaf 11 'A' "dfd"), 
-          Node 121 (Leaf 22 'A' "df") (Leaf 11 'A' "dfd"),
-          Node 21  (Leaf 22 'A' "df") (Leaf 11 'A' "dfd"),
-          Node 12  (Leaf 22 'A' "df") (Leaf 11 'A' "dfd"),
-          Node 65  (Leaf 22 'A' "df") (Leaf 11 'A' "dfd"),
-          Node 6   (Leaf 22 'A' "df") (Leaf 11 'A' "dfd")
+          Node 34  (Leaf 'A') (Leaf 'A'), 
+          Node 121 (Leaf 'A') (Leaf 'A'),
+          Node 21  (Leaf 'A') (Leaf 'A'),
+          Node 12  (Leaf 'A') (Leaf 'A'),
+          Node 65  (Leaf 'A') (Leaf 'A'),
+          Node 6   (Leaf 'A') (Leaf 'A')
           ]
         
---huffmanTree :: [(Char, Int)] -> [(Char, [Char])]
---huffmanTree xs = 
---    let (fs, hs)  = subHuffmanTreePrepare xs [] []
---        ts = subHuffmanTree1 fs hs []
---    in subHuffmanTree2 ts []
+huffmanTree :: [(Char, Int)] -> [(Char, [Char])]
+huffmanTree xs = 
+    let (fs, hs)  = subHuffmanTreePrepare xs [] []
+        ts = subHuffmanTree1 fs hs []
+        newts = subHuffmanTree2 ts
+    in subHuffmanTree3 newts []
 
-subHuffmanTreePrepare :: [(Char, Int)] -> [Int] -> [(Char, [Char])] 
-                                -> ([Int], [(Char, [Char])])
+subHuffmanTreePrepare :: [(Char, Int)] -> [Int] -> [Char] 
+                                -> ([Int], [Char])
 subHuffmanTreePrepare [] fs hs = (fs, hs)
 subHuffmanTreePrepare (x:xs) fs hs = 
     let f   = snd x
         val = fst x
-    in subHuffmanTreePrepare xs (f:fs) ((val, ""):hs)
+    in subHuffmanTreePrepare xs (f:fs) (val:hs)
 
---subHuffmanTree1 :: [Int] -> [(Char, [Char])] -> [(Tree Int Char [Char])] 
---                        -> [(Tree Int Char [Char])]
---subHuffmanTree1 [] _  ts = ts
---subHuffmanTree1 fs hs ts =
---    let [min1, min2] = myMinN2 fs 2
---        (newfs, newhs, newts) = subHuffmanTreePair fs hs ts min1 min2
---        ids1 = grep2 min1 newfs
---        ids2 = grep2 min2 newfs
---        valxs = filter (\(x, y) -> x /= (-1)) [(ids1, min1), (ids2, min2)]
---        (newfs2, newhs2, newts2) = subHuffmanTreeSingle newfs newhs newts valxs
---    in subHuffmanTree1 newfs2 newhs2 newts2
+subHuffmanTree1 :: [Int] -> [Char] -> [(Tree Int Char)] 
+                        -> [(Tree Int Char)]
+subHuffmanTree1 [] _  ts = ts
+subHuffmanTree1 fs hs ts =
+    let minxs = myMinN2 fs 2
+        (min1, min2) = getMins minxs
+        (newfs3, newhs3, newts3) = if (min1 /= -1) `myAnd` (min2 /= -1)
+                                   then let (newfs, newhs, newts) = subHuffmanTreePair fs hs ts [min1, min2]
+                                            ids1 = grep2 min1 newfs
+                                            ids2 = grep2 min2 newfs
+                                            valxs = filter (\(x, y) -> x /= (-1)) [(ids1, min1), (ids2, min2)]
+                                            (newfs2, newhs2, newts2) = subHuffmanTreeSingle newfs newhs newts valxs
+                                        in (newfs2, newhs2, newts2)
+                                   else let ids1 = grep2 min1 fs
+                                            ids2 = grep2 min2 fs
+                                            valxs = filter (\(x, y) -> x /= (-1)) [(ids1, min1), (ids2, min2)]
+                                            (newfs2, newhs2, newts2) = subHuffmanTreeSingle fs hs ts valxs
+                                        in (newfs2, newhs2, newts2)
+    in subHuffmanTree1 newfs3 newhs3 newts3
 
---subHuffmanTreePair :: [Int] -> [(Char, [Char])] -> 
---                      [(Tree Int Char [Char])] -> Int -> Int -> 
---                      ([Int], [(Char, [Char])], [(Tree Int Char [Char])])
---subHuffmanTreePair fs hs ts min1 min2 = 
---    let idx1 = 
+subHuffmanTreePair :: [Int] -> [Char] -> 
+                      [(Tree Int Char)] -> [Int] ->
+                      ([Int], [Char], [(Tree Int Char)])
+subHuffmanTreePair fs hs ts minxs 
+    | length minxs == 2 = 
+        let [(min2, idx2), (min1, idx1)] = myMinIdxN fs 2
+            chr1 = (hs !! idx1)
+            chr2 = (hs !! idx2)
+            ftree = if min1 >= min2
+                    then Node (min1 + min2) (Leaf chr2) (Leaf chr1)
+                    else Node (min1 + min2) (Leaf chr1) (Leaf chr2)
+            newts = ts ++ [ftree]
+            (newfs, newhs) = if idx2 > idx1
+                             then (deleteListElemn fs [idx1, idx2], 
+                                   deleteListElemn hs [idx1, idx2])
+                             else (deleteListElemn fs [idx2, idx1], 
+                                   deleteListElemn hs [idx2, idx1])
+            newminxs = myMinN2 fs 2
+        in  subHuffmanTreePair newfs newhs newts newminxs
+    | otherwise = (fs, hs, ts)
 
-
-subHuffmanTreeSingle :: [Int] -> [(Char, [Char])] ->
-                        [(Tree Int Char [Char])] -> [(Int, Int)] -> 
-                        ([Int], [(Char, [Char])], [(Tree Int Char [Char])])
+subHuffmanTreeSingle :: [Int] -> [Char] ->
+                        [(Tree Int Char)] -> [(Int, Int)] -> 
+                        ([Int], [Char], [(Tree Int Char)])
 subHuffmanTreeSingle fs hs ts [] = (fs, hs, ts)
 subHuffmanTreeSingle fs hs ts [(_, minx)] = 
     let idx = closerIdxSpe minx ts
         (Node sm l r) = (ts !! idx)
-        chrvl = fst (hs !! idx)
+        chrvl = (hs !! idx)
         newtree = if minx >= sm
-                  then (Node (sm + minx) (Node sm l r) (Leaf minx chrvl ""))
-                  else (Node (sm + minx) (Leaf minx chrvl "") (Node sm l r))
+                  then (Node (sm + minx) (Node sm l r) (Leaf chrvl))
+                  else (Node (sm + minx) (Leaf chrvl) (Node sm l r))
         newts = updateListElem ts idx newtree
         newfs = deleteListElem fs idx
         newhs = deleteListElem hs idx
     in (newfs, newhs, newts)
         
+subHuffmanTree2 :: [(Tree Int Char)] -> (Tree Int Char)
+subHuffmanTree2 [x] = x
+subHuffmanTree2 ((Node x1 l1 r1):xs) = 
+    let idx = closerIdxSpe x1 xs
+        (Node x2 l2 r2) = (xs !! idx)
+        tree = if x1 >= x2
+               then Node (x1 + x2) (Node x2 l2 r2) (Node x1 l1 r1)
+               else Node (x1 + x2) (Node x1 l1 r1) (Node x2 l2 r2)
+        newxs  = deleteListElem xs 0
+        newxs2 = updateListElem newxs idx tree
+    in subHuffmanTree2 newxs2
 
-
+subHuffmanTree3 :: (Tree Int Char) -> [Char] -> [(Char, [Char])]
+subHuffmanTree3 (Leaf chr) hs = [(chr, hs)]
+subHuffmanTree3 (Node _ l r) hs = subHuffmanTree3 l (hs ++ ['0']) ++ subHuffmanTree3 r (hs ++ ['1'])
 
 
 
