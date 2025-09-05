@@ -1051,7 +1051,7 @@ reverseTree MyEmpty = MyEmpty
 reverseTree (MyNode x l r) = MyNode x (reverseTree r) (reverseTree l)
 
 
--- 59 
+-- 59, not height balanced... 
 
 hbalTree :: a -> Int -> [(MyTree a)]
 hbalTree val n = subHbalTree val (n - 1) (MyNode val MyEmpty MyEmpty)
@@ -1061,7 +1061,7 @@ subHbalTree _ 0 tree = [tree]
 subHbalTree val n tree = (subHbalTree val (n - 1) (MyNode val tree MyEmpty)) ++ 
                          (subHbalTree val (n - 1) (MyNode val MyEmpty tree))
 
-
+-- 59
 
 
 
