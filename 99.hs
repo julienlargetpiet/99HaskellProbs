@@ -1,10 +1,231 @@
 import qualified System.Random as R
 
---1
+
+-- helpers
+
+myMin :: (Ord a) => [a] -> a
+myMin xs = subMyMin xs (head xs)
+
+subMyMin :: (Ord a) => [a] -> a -> a
+subMyMin [] cmp = cmp
+subMyMin (x:xs) cmp = 
+    let cmp2 = if cmp <= x
+              then cmp
+              else x
+    in subMyMin xs cmp2
+
+myMax :: (Ord a) => [a] -> a
+myMax xs = subMyMax xs (head xs)
+
+subMyMax :: (Ord a) => [a] -> a -> a
+subMyMax [] cmp = cmp
+subMyMax (x:xs) cmp = 
+    let cmp2 = if cmp >= x
+              then cmp
+              else x
+    in subMyMax xs cmp2
+
+myMinN :: (Ord a) => [a] -> Int -> [a]
+myMinN xs cmpn = subMyMinN xs 0 cmpn []
+
+subMyMinN :: (Ord a) => [a] -> Int -> Int -> [a] -> [a]
+subMyMinN [] _ _ xs2 = xs2
+subMyMinN xs n cmpn xs2
+    | n < cmpn = 
+        let val = myMin xs
+            ids = grepn2 val xs
+            newxs = deleteListElemn xs (reverse ids)
+            newxs2 = val:xs2
+        in subMyMinN newxs (n + 1) cmpn newxs2
+    | otherwise = xs2
+
+myMinN2 :: (Ord a) => [a] -> Int -> [a]
+myMinN2 xs cmpn = subMyMinN2 xs 0 cmpn []
+
+subMyMinN2 :: (Ord a) => [a] -> Int -> Int -> [a] -> [a]
+subMyMinN2 [] _ _ xs2 = xs2
+subMyMinN2 xs n cmpn xs2
+    | n < cmpn = 
+        let val = myMin xs
+            idx = match2 val xs
+            newxs = deleteListElem xs idx
+            newxs2 = val:xs2
+        in subMyMinN2 newxs (n + 1) cmpn newxs2
+    | otherwise = xs2
+
+match :: (Eq a) => a -> [a] -> Maybe Int
+match cmp xs = subMatch xs cmp 0
+
+subMatch :: (Eq a) => [a] -> a -> Int -> Maybe Int
+subMatch [] _ _ = Nothing
+subMatch (x:xs) cmp n
+    | x == cmp = Just n
+    | otherwise = subMatch xs cmp (n + 1)
+
+match2 :: (Eq a) => a -> [a] -> Int
+match2 cmp xs = subMatch2 xs cmp 0
+
+subMatch2 :: (Eq a) => [a] -> a -> Int -> Int
+subMatch2 [] _ _ = -1
+subMatch2 (x:xs) cmp n
+    | x == cmp = n
+    | otherwise = subMatch2 xs cmp (n + 1)
+
+deleteListElem :: [a] -> Int -> [a]
+deleteListElem xs n = subDeleteListElem xs n 0
+
+subDeleteListElem :: [a] -> Int -> Int -> [a]
+subDeleteListElem [] _ _ = []
+subDeleteListElem (x:xs) cmp n
+    | n /= cmp = x:(subDeleteListElem xs cmp (n + 1))
+    | otherwise = subDeleteListElem xs cmp (n + 1)
+
+deleteListElemn :: [a] -> [Int] -> [a]
+deleteListElemn xs nxs = subDeleteListElemn xs nxs 0
+
+subDeleteListElemn :: [a] -> [Int] -> Int -> [a]
+subDeleteListElemn xs [] _ = xs
+subDeleteListElemn xs (cmp:cmpxs) n = 
+    let newxs = subDeleteListElem xs (cmp - n) 0
+    in subDeleteListElemn newxs cmpxs (n + 1)
+
+updateListElem :: [a] -> Int -> a -> [a]
+updateListElem xs ncmp val = subUpdateListElem xs 0 ncmp val
+
+subUpdateListElem :: [a] -> Int -> Int -> a -> [a]
+subUpdateListElem [] _ _ _ = []
+subUpdateListElem (x:xs) n ncmp val
+    | n /= ncmp = x:(subUpdateListElem xs (n + 1) ncmp val)
+    | otherwise = val:(subUpdateListElem xs (n + 1) ncmp val)
+
+myMinIdx :: (Ord a) => [a] -> (a, Int)
+myMinIdx xs = subMyMinIdx xs (head xs) 0 0
+
+subMyMinIdx :: (Ord a) => [a] -> a -> Int -> Int -> (a, Int)
+subMyMinIdx [] cmp n _ = (cmp, n)
+subMyMinIdx (x:xs) cmp n n2 = 
+    let (newcmp, newn) = if cmp <= x
+                         then (cmp, n)
+                         else (x, n2)
+    in subMyMinIdx xs newcmp newn (n2 + 1)
+
+myMinIdxN :: [Int] -> Int -> [(Int, Int)]
+myMinIdxN xs n = subMyMinIdxNB xs n 0 []
+
+subMyMinIdxNB :: [Int] -> Int -> Int -> [(Int, Int)] -> [(Int, Int)]
+subMyMinIdxNB xs cmpn n xs2
+    | n < cmpn = 
+        let (minval, idxval) = subMyMinIdx xs (head xs) 0 0
+            newxs = updateListElem xs idxval (maxBound :: Int)
+        in subMyMinIdxNB newxs cmpn (n + 1) ((minval, idxval):xs2)
+    | otherwise = xs2
+
+myMinIdx2 :: (Ord a) => [a] -> Int
+myMinIdx2 xs = subMyMinIdx2 xs (head xs) 0 0
+
+subMyMinIdx2 :: (Ord a) => [a] -> a -> Int -> Int -> Int
+subMyMinIdx2 [] _ n _ = n
+subMyMinIdx2 (x:xs) cmp n n2 = 
+    let (newcmp, newn) = if cmp <= x
+                         then (cmp, n)
+                         else (x, n2)
+    in subMyMinIdx2 xs newcmp newn (n2 + 1)
+
+grep :: (Eq a) => a -> [a] -> Maybe Int
+grep cmp xs = subGrep xs cmp 0
+
+subGrep :: (Eq a) => [a] -> a -> Int -> Maybe Int
+subGrep [] _ _ = Nothing
+subGrep (x:xs) cmp n
+    | cmp == x = Just n
+    | otherwise = subGrep xs cmp (n + 1)
+
+grep2 :: (Eq a) => a -> [a] -> Int
+grep2 cmp xs = subGrep2 xs cmp 0
+
+subGrep2 :: (Eq a) => [a] -> a -> Int -> Int
+subGrep2 [] _ _ = -1
+subGrep2 (x:xs) cmp n
+    | cmp == x = n
+    | otherwise = subGrep2 xs cmp (n + 1)
+
+grepn :: (Eq a) => a -> [a] -> Maybe [Int]
+grepn cmp xs = subGrepn xs cmp 0 []
+
+subGrepn :: (Eq a) => [a] -> a -> Int -> [Int] -> Maybe [Int]
+subGrepn [] _ _ nxs = if null nxs then Nothing else Just nxs
+subGrepn (x:xs) cmp n nxs
+    | cmp == x  = subGrepn xs cmp (n + 1) (n:nxs)
+    | otherwise = subGrepn xs cmp (n + 1) nxs
+
+grepn2 :: (Eq a) => a -> [a] -> [Int]
+grepn2 cmp xs = subGrepn2 xs cmp 0 []
+
+subGrepn2 :: (Eq a) => [a] -> a -> Int -> [Int] -> [Int]
+subGrepn2 [] _ _ nxs = nxs
+subGrepn2 (x:xs) cmp n nxs
+    | cmp == x  = subGrepn2 xs cmp (n + 1) (n:nxs)
+    | otherwise = subGrepn2 xs cmp (n + 1) nxs
+
+grepmn2 :: (Eq a) => [a] -> [a] -> [Int]
+grepmn2 [] _ = []
+grepmn2 (x2:xs2) xs = (grepn2 x2 xs) ++ (grepmn2 xs2 xs)
+
+isIn :: (Eq a) => a -> [a] -> Bool
+isIn _ [] = False
+isIn cmp (x:xs)
+    | cmp == x = True
+    | otherwise = isIn cmp xs
+
+isInn :: (Eq a) => [a] -> [a] -> Bool
+isInn [] _ = True
+isInn (cmp:valxs) xs
+    | (isIn cmp xs) = isInn valxs xs
+    | otherwise   = False
+
+closerIdx :: (Num a, Ord a) => a -> [a] -> Int
+closerIdx cmp xs = myMinIdx2 (subCloserIdx cmp xs)
+
+subCloserIdx :: (Num a, Ord a) => a -> [a] -> [a]
+subCloserIdx _ [] = []
+subCloserIdx cmp (x:xs) = (abs(cmp - x)):(subCloserIdx cmp xs)
+
+closerIdxSpe :: (Num a, Ord a) => a -> [(Tree a Char)] -> Int
+closerIdxSpe cmp xs = myMinIdx2 (subCloserIdxSpe cmp xs)
+
+subCloserIdxSpe :: (Num a, Ord a) => a -> [(Tree a Char)] -> [a]
+subCloserIdxSpe _ [] = []
+subCloserIdxSpe cmp ((Node x _ _):xs) = (abs(cmp - x)):(subCloserIdxSpe cmp xs)
+
+getMins :: [Int] -> (Int, Int)
+getMins xs
+    | length xs == 2 = ((xs !! 0), (xs !! 1))
+    | length xs < 2  = ((xs !! 0), -1)
+    | otherwise      = (-1, -1)
+
+--sortWith :: (Ord a, Eq a) => [a] -> [b] -> ([a], [b])
+--sortWith xs xs2 = 
+--    let newxs = quickSortAsc xs
+--        ids = grepn
+
+myTrees :: [Tree Int Char]
+myTrees = [
+          Node 34  (Leaf 'A') (Leaf 'A'), 
+          Node 121 (Leaf 'A') (Leaf 'A'),
+          Node 21  (Leaf 'A') (Leaf 'A'),
+          Node 12  (Leaf 'A') (Leaf 'A'),
+          Node 65  (Leaf 'A') (Leaf 'A'),
+          Node 6   (Leaf 'A') (Leaf 'A')
+          ]
+
+
+-- 1
+
 myLast :: [a] -> a
 myLast xs = last xs
 
---1
+-- 1 other version
+
 myButLast :: [a] -> a
 myButLast (x1:x2:x3:xs) = x3
 
@@ -651,226 +872,10 @@ gray n =
     let xs = myReplicate n "10"
     in mySequence xs
 
-
 -- 50
-
-myMin :: (Ord a) => [a] -> a
-myMin xs = subMyMin xs (head xs)
-
-subMyMin :: (Ord a) => [a] -> a -> a
-subMyMin [] cmp = cmp
-subMyMin (x:xs) cmp = 
-    let cmp2 = if cmp <= x
-              then cmp
-              else x
-    in subMyMin xs cmp2
-
-myMax :: (Ord a) => [a] -> a
-myMax xs = subMyMax xs (head xs)
-
-subMyMax :: (Ord a) => [a] -> a -> a
-subMyMax [] cmp = cmp
-subMyMax (x:xs) cmp = 
-    let cmp2 = if cmp >= x
-              then cmp
-              else x
-    in subMyMax xs cmp2
-
-myMinN :: (Ord a) => [a] -> Int -> [a]
-myMinN xs cmpn = subMyMinN xs 0 cmpn []
-
-subMyMinN :: (Ord a) => [a] -> Int -> Int -> [a] -> [a]
-subMyMinN [] _ _ xs2 = xs2
-subMyMinN xs n cmpn xs2
-    | n < cmpn = 
-        let val = myMin xs
-            ids = grepn2 val xs
-            newxs = deleteListElemn xs (reverse ids)
-            newxs2 = val:xs2
-        in subMyMinN newxs (n + 1) cmpn newxs2
-    | otherwise = xs2
-
-myMinN2 :: (Ord a) => [a] -> Int -> [a]
-myMinN2 xs cmpn = subMyMinN2 xs 0 cmpn []
-
-subMyMinN2 :: (Ord a) => [a] -> Int -> Int -> [a] -> [a]
-subMyMinN2 [] _ _ xs2 = xs2
-subMyMinN2 xs n cmpn xs2
-    | n < cmpn = 
-        let val = myMin xs
-            idx = match2 val xs
-            newxs = deleteListElem xs idx
-            newxs2 = val:xs2
-        in subMyMinN2 newxs (n + 1) cmpn newxs2
-    | otherwise = xs2
-
-match :: (Eq a) => a -> [a] -> Maybe Int
-match cmp xs = subMatch xs cmp 0
-
-subMatch :: (Eq a) => [a] -> a -> Int -> Maybe Int
-subMatch [] _ _ = Nothing
-subMatch (x:xs) cmp n
-    | x == cmp = Just n
-    | otherwise = subMatch xs cmp (n + 1)
-
-match2 :: (Eq a) => a -> [a] -> Int
-match2 cmp xs = subMatch2 xs cmp 0
-
-subMatch2 :: (Eq a) => [a] -> a -> Int -> Int
-subMatch2 [] _ _ = -1
-subMatch2 (x:xs) cmp n
-    | x == cmp = n
-    | otherwise = subMatch2 xs cmp (n + 1)
-
-deleteListElem :: [a] -> Int -> [a]
-deleteListElem xs n = subDeleteListElem xs n 0
-
-subDeleteListElem :: [a] -> Int -> Int -> [a]
-subDeleteListElem [] _ _ = []
-subDeleteListElem (x:xs) cmp n
-    | n /= cmp = x:(subDeleteListElem xs cmp (n + 1))
-    | otherwise = subDeleteListElem xs cmp (n + 1)
-
-deleteListElemn :: [a] -> [Int] -> [a]
-deleteListElemn xs nxs = subDeleteListElemn xs nxs 0
-
-subDeleteListElemn :: [a] -> [Int] -> Int -> [a]
-subDeleteListElemn xs [] _ = xs
-subDeleteListElemn xs (cmp:cmpxs) n = 
-    let newxs = subDeleteListElem xs (cmp - n) 0
-    in subDeleteListElemn newxs cmpxs (n + 1)
-
-updateListElem :: [a] -> Int -> a -> [a]
-updateListElem xs ncmp val = subUpdateListElem xs 0 ncmp val
-
-subUpdateListElem :: [a] -> Int -> Int -> a -> [a]
-subUpdateListElem [] _ _ _ = []
-subUpdateListElem (x:xs) n ncmp val
-    | n /= ncmp = x:(subUpdateListElem xs (n + 1) ncmp val)
-    | otherwise = val:(subUpdateListElem xs (n + 1) ncmp val)
-
-myMinIdx :: (Ord a) => [a] -> (a, Int)
-myMinIdx xs = subMyMinIdx xs (head xs) 0 0
-
-subMyMinIdx :: (Ord a) => [a] -> a -> Int -> Int -> (a, Int)
-subMyMinIdx [] cmp n _ = (cmp, n)
-subMyMinIdx (x:xs) cmp n n2 = 
-    let (newcmp, newn) = if cmp <= x
-                         then (cmp, n)
-                         else (x, n2)
-    in subMyMinIdx xs newcmp newn (n2 + 1)
-
-myMinIdxN :: [Int] -> Int -> [(Int, Int)]
-myMinIdxN xs n = subMyMinIdxNB xs n 0 []
-
-subMyMinIdxNB :: [Int] -> Int -> Int -> [(Int, Int)] -> [(Int, Int)]
-subMyMinIdxNB xs cmpn n xs2
-    | n < cmpn = 
-        let (minval, idxval) = subMyMinIdx xs (head xs) 0 0
-            newxs = updateListElem xs idxval (maxBound :: Int)
-        in subMyMinIdxNB newxs cmpn (n + 1) ((minval, idxval):xs2)
-    | otherwise = xs2
-
-myMinIdx2 :: (Ord a) => [a] -> Int
-myMinIdx2 xs = subMyMinIdx2 xs (head xs) 0 0
-
-subMyMinIdx2 :: (Ord a) => [a] -> a -> Int -> Int -> Int
-subMyMinIdx2 [] _ n _ = n
-subMyMinIdx2 (x:xs) cmp n n2 = 
-    let (newcmp, newn) = if cmp <= x
-                         then (cmp, n)
-                         else (x, n2)
-    in subMyMinIdx2 xs newcmp newn (n2 + 1)
-
-grep :: (Eq a) => a -> [a] -> Maybe Int
-grep cmp xs = subGrep xs cmp 0
-
-subGrep :: (Eq a) => [a] -> a -> Int -> Maybe Int
-subGrep [] _ _ = Nothing
-subGrep (x:xs) cmp n
-    | cmp == x = Just n
-    | otherwise = subGrep xs cmp (n + 1)
-
-grep2 :: (Eq a) => a -> [a] -> Int
-grep2 cmp xs = subGrep2 xs cmp 0
-
-subGrep2 :: (Eq a) => [a] -> a -> Int -> Int
-subGrep2 [] _ _ = -1
-subGrep2 (x:xs) cmp n
-    | cmp == x = n
-    | otherwise = subGrep2 xs cmp (n + 1)
-
-grepn :: (Eq a) => a -> [a] -> Maybe [Int]
-grepn cmp xs = subGrepn xs cmp 0 []
-
-subGrepn :: (Eq a) => [a] -> a -> Int -> [Int] -> Maybe [Int]
-subGrepn [] _ _ nxs = if null nxs then Nothing else Just nxs
-subGrepn (x:xs) cmp n nxs
-    | cmp == x  = subGrepn xs cmp (n + 1) (n:nxs)
-    | otherwise = subGrepn xs cmp (n + 1) nxs
-
-grepn2 :: (Eq a) => a -> [a] -> [Int]
-grepn2 cmp xs = subGrepn2 xs cmp 0 []
-
-subGrepn2 :: (Eq a) => [a] -> a -> Int -> [Int] -> [Int]
-subGrepn2 [] _ _ nxs = nxs
-subGrepn2 (x:xs) cmp n nxs
-    | cmp == x  = subGrepn2 xs cmp (n + 1) (n:nxs)
-    | otherwise = subGrepn2 xs cmp (n + 1) nxs
-
-grepmn2 :: (Eq a) => [a] -> [a] -> [Int]
-grepmn2 [] _ = []
-grepmn2 (x2:xs2) xs = (grepn2 x2 xs) ++ (grepmn2 xs2 xs)
-
-isIn :: (Eq a) => a -> [a] -> Bool
-isIn _ [] = False
-isIn cmp (x:xs)
-    | cmp == x = True
-    | otherwise = isIn cmp xs
-
-isInn :: (Eq a) => [a] -> [a] -> Bool
-isInn [] _ = True
-isInn (cmp:valxs) xs
-    | (isIn cmp xs) = isInn valxs xs
-    | otherwise   = False
-
-closerIdx :: (Num a, Ord a) => a -> [a] -> Int
-closerIdx cmp xs = myMinIdx2 (subCloserIdx cmp xs)
-
-subCloserIdx :: (Num a, Ord a) => a -> [a] -> [a]
-subCloserIdx _ [] = []
-subCloserIdx cmp (x:xs) = (abs(cmp - x)):(subCloserIdx cmp xs)
-
-closerIdxSpe :: (Num a, Ord a) => a -> [(Tree a Char)] -> Int
-closerIdxSpe cmp xs = myMinIdx2 (subCloserIdxSpe cmp xs)
-
-subCloserIdxSpe :: (Num a, Ord a) => a -> [(Tree a Char)] -> [a]
-subCloserIdxSpe _ [] = []
-subCloserIdxSpe cmp ((Node x _ _):xs) = (abs(cmp - x)):(subCloserIdxSpe cmp xs)
-
-getMins :: [Int] -> (Int, Int)
-getMins xs
-    | length xs == 2 = ((xs !! 0), (xs !! 1))
-    | length xs < 2  = ((xs !! 0), -1)
-    | otherwise      = (-1, -1)
-
---sortWith :: (Ord a, Eq a) => [a] -> [b] -> ([a], [b])
---sortWith xs xs2 = 
---    let newxs = quickSortAsc xs
---        ids = grepn
 
 data Tree a b = Leaf b | Node a (Tree a b) (Tree a b) deriving (Show)
 
-myTrees :: [Tree Int Char]
-myTrees = [
-          Node 34  (Leaf 'A') (Leaf 'A'), 
-          Node 121 (Leaf 'A') (Leaf 'A'),
-          Node 21  (Leaf 'A') (Leaf 'A'),
-          Node 12  (Leaf 'A') (Leaf 'A'),
-          Node 65  (Leaf 'A') (Leaf 'A'),
-          Node 6   (Leaf 'A') (Leaf 'A')
-          ]
-        
 huffmanTree :: [(Char, Int)] -> [(Char, [Char])]
 huffmanTree xs = 
     let (fs, hs)  = subHuffmanTreePrepare xs [] []
