@@ -1053,15 +1053,32 @@ reverseTree (MyNode x l r) = MyNode x (reverseTree r) (reverseTree l)
 
 -- 59, not height balanced... 
 
-hbalTree :: a -> Int -> [(MyTree a)]
-hbalTree val n = subHbalTree val (n - 1) (MyNode val MyEmpty MyEmpty)
+nhbalTree :: a -> Int -> [(MyTree a)]
+nhbalTree val n = subNHbalTree val (n - 1) (MyNode val MyEmpty MyEmpty)
 
-subHbalTree :: a -> Int -> (MyTree a) -> [(MyTree a)]
-subHbalTree _ 0 tree = [tree]
-subHbalTree val n tree = (subHbalTree val (n - 1) (MyNode val tree MyEmpty)) ++ 
-                         (subHbalTree val (n - 1) (MyNode val MyEmpty tree))
+subNHbalTree :: a -> Int -> (MyTree a) -> [(MyTree a)]
+subNHbalTree _ 0 tree = [tree]
+subNHbalTree val n tree = (subNHbalTree val (n - 1) (MyNode val tree MyEmpty)) ++ 
+                         (subNHbalTree val (n - 1) (MyNode val MyEmpty tree))
 
 -- 59
+
+hbalTree :: a -> Int -> [(MyTree a)]
+hbalTree val n = subHbalTree val (n - 1) 0 (MyNode val MyEmpty MyEmpty)
+
+subHbalTree :: a -> Int -> Int -> (MyTree a) -> [(MyTree a)]
+subHbalTree _ 0 _ tree = [tree]
+subHbalTree val n cmp tree 
+    | cmp > 0 = (subHbalTree val (n - 1) (cmp + 1) (MyNode val tree (restTree val cmp))) ++ 
+                         (subHbalTree val (n - 1) (cmp + 1) (MyNode val (restTree val cmp) tree))
+    | otherwise = (subHbalTree val (n - 1) (cmp + 1) (MyNode val tree MyEmpty)) ++ 
+                         (subHbalTree val (n - 1) (cmp + 1) (MyNode val MyEmpty tree))
+    where restTree _ 0   = MyEmpty
+          restTree val n = MyNode val (restTree val (n - 1)) (restTree val (n - 1)) 
+
+
+
+
 
 
 
