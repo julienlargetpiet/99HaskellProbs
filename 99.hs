@@ -3,6 +3,15 @@ import qualified System.Random as R
 
 -- helpers
 
+unique :: (Eq a) => [a] -> [a]
+unique xs = subUnique xs []
+
+subUnique :: (Eq a) => [a] -> [a] -> [a]
+subUnique [] xs2 = xs2
+subUnique (x:xs) xs2
+    | x `elem` xs2 = subUnique xs xs2
+    | otherwise = subUnique xs (x:xs2)
+
 myMin :: (Ord a) => [a] -> a
 myMin xs = subMyMin xs (head xs)
 
@@ -963,6 +972,94 @@ subHuffmanTree3 :: (Tree Int Char) -> [Char] -> [(Char, [Char])]
 subHuffmanTree3 (Leaf chr) hs = [(chr, hs)]
 subHuffmanTree3 (Node _ l r) hs = subHuffmanTree3 l (hs ++ ['0']) ++ subHuffmanTree3 r (hs ++ ['1'])
 
+
+-- 55 prev
+
+--Count how many nodes a full tree has given its depth
+
+countNodes :: Int -> Int
+countNodes 0 = 1
+countNodes n = 2 ^ n + (countNodes (n - 1))
+
+-- 55 all permutations from 1 Node = (n - 1) permutations where n is the dept level
+
+data MyTree a = MyEmpty | MyNode a (MyTree a) (MyTree a) deriving (Show, Eq)
+
+cbalTree1 :: Int -> [MyTree Char]
+cbalTree1 n = subCbalTree1 (n - 1) (MyNode 'x' (MyEmpty) (MyEmpty))
+
+subCbalTree1 :: Int -> (MyTree Char) -> [MyTree Char]
+subCbalTree1 0 tree = [tree]
+subCbalTree1 n tree = (subCbalTree1 (n - 1) (MyNode 'X' tree (MyEmpty)))
+                      ++ (subCbalTree1 (n - 1) (MyNode 'X' (MyEmpty) tree))
+
+-- 55 Wow this is elegant !!!!!
+
+cbalTree :: Int -> [(MyTree Char)]
+cbalTree 0 = [MyEmpty]
+cbalTree 1 = [MyNode 'x' MyEmpty MyEmpty]
+cbalTree n = if n `mod` 2 == 1 then 
+             [ MyNode 'x' l r | l <- cbalTree ((n - 1) `div` 2), 
+                                r <- cbalTree ((n - 1) `div` 2) ] 
+             else 
+             concat [ [MyNode 'x' l r, MyNode 'x' r l] | l <- cbalTree ((n - 1) `div` 2), 
+                                                         r <- cbalTree (n `div` 2) ]
+
+-- 56
+
+isSymetric :: (Eq a) => (MyTree a) -> Bool
+isSymetric (MyNode _ l r) = l == r
+
+-- 57
+
+construct :: (Ord a) => [a] -> (MyTree a)
+construct (x:xs) = subConstruct xs (MyNode x MyEmpty MyEmpty)
+
+subConstruct :: (Ord a) => [a] -> (MyTree a) -> (MyTree a)
+subConstruct [] _ = MyEmpty
+subConstruct xs (MyNode cmp _ _) = 
+    let xs1 = filter (< cmp) xs
+        x1 = myMax xs1
+        xs2 = filter (> cmp) xs
+        x2 = myMin xs2
+    in MyNode cmp (subConstruct xs1 (MyNode x1 MyEmpty MyEmpty)) (subConstruct xs2 (MyNode x2 MyEmpty MyEmpty))
+
+
+-- 58
+
+--symCbalTree :: Int -> [(MyTree Char)]
+--symCbalTree n = keepSymetric (subSymCbalTree (n - 1) (MyNode 'X' MyEmpty MyEmpty))
+--
+--subSymCbalTree :: Int -> (MyTree Char) -> [(MyTree Char)]
+--subSymCbalTree 0 tree = [tree]
+--subSymCbalTree 1 tree = (subSymCbalTree 0 (MyNode 'X' tree MyEmpty)) ++ (subSymCbalTree 0 (MyNode 'X' MyEmpty tree))
+--subSymCbalTree n tree = (subSymCbalTree (n - 2) (MyNode 'X' tree (MyNode 'X' MyEmpty MyEmpty))) ++ (subSymCbalTree (n - 2) (MyNode 'X' (MyNode 'X' MyEmpty MyEmpty) tree))
+
+-- Indeed very good because if nodes is even, then subnodes are odds then no symetry can be prooved between the right and left part of the tree with even number of nodes, because one side will hae more nodes than the other
+-- So this just takes the quotient of number of nodes, computes all posible trees with this even quotient (odd - 1 == even, where odd is the number of nodes of the general tree)
+-- this is done for one side (in this case the roght), so the left must be symetric to the right, how to do that???
+-- just 'reverse' all the nodes computed from the cbalTree function for this iteration
+-- We iterate, with the comprehension list to solve all the possible trees to do with ((n - 1) / 2) nodes and apply the same logic.... ;)
+
+symCbalTree :: Int -> [(MyTree Char)]
+symCbalTree n = if n `mod` 2 == 0
+                then []
+                else [MyNode 'X' t (reverseTree t) | t <- cbalTree (n `div` 2)]
+
+reverseTree :: (MyTree Char) -> (MyTree Char)
+reverseTree MyEmpty = MyEmpty
+reverseTree (MyNode x l r) = MyNode x (reverseTree r) (reverseTree l)
+
+
+-- 59 
+
+hbalTree :: a -> Int -> [(MyTree a)]
+hbalTree val n = subHbalTree val (n - 1) (MyNode val MyEmpty MyEmpty)
+
+subHbalTree :: a -> Int -> (MyTree a) -> [(MyTree a)]
+subHbalTree _ 0 tree = [tree]
+subHbalTree val n tree = (subHbalTree val (n - 1) (MyNode val tree MyEmpty)) ++ 
+                         (subHbalTree val (n - 1) (MyNode val MyEmpty tree))
 
 
 
