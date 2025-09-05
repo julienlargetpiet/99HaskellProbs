@@ -923,7 +923,7 @@ subHuffmanTreePair fs hs ts minxs
                                    deleteListElemn hs [idx1, idx2])
                              else (deleteListElemn fs [idx2, idx1], 
                                    deleteListElemn hs [idx2, idx1])
-            newminxs = myMinN2 fs 2
+            newminxs = myMinN2 newfs 2
         in  subHuffmanTreePair newfs newhs newts newminxs
     | otherwise = (fs, hs, ts)
 
@@ -951,9 +951,8 @@ subHuffmanTree2 ((Node x1 l1 r1):xs) =
         tree = if x1 >= x2
                then Node (x1 + x2) (Node x2 l2 r2) (Node x1 l1 r1)
                else Node (x1 + x2) (Node x1 l1 r1) (Node x2 l2 r2)
-        newxs  = deleteListElem xs 0
-        newxs2 = updateListElem newxs idx tree
-    in subHuffmanTree2 newxs2
+        newxs = updateListElem xs idx tree
+    in subHuffmanTree2 newxs
 
 subHuffmanTree3 :: (Tree Int Char) -> [Char] -> [(Char, [Char])]
 subHuffmanTree3 (Leaf chr) hs = [(chr, hs)]
