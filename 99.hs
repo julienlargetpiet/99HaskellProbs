@@ -1185,7 +1185,7 @@ isCompleteBinary tree =
 subIsCompleteBinary :: (MyTree Char) -> Int -> Int -> [Int]
 subIsCompleteBinary MyEmpty n _ = [-n + 1]
 subIsCompleteBinary (MyNode _ MyEmpty MyEmpty) n treedepth = if n == treedepth
-                                                             then [n]
+                                                             then [n - 1]
                                                              else  [-n, -n]
 subIsCompleteBinary (MyNode _ l r) n treedepth = subIsCompleteBinary l (n + 1) treedepth ++ subIsCompleteBinary r (n + 1) treedepth
 
@@ -1193,7 +1193,7 @@ subIsCompleteBinaryVerify :: [Int] -> Int -> Int -> Int -> Bool
 subIsCompleteBinaryVerify [] _ _ _ = True
 subIsCompleteBinaryVerify (x:xs) n lst treedepth
     | (x > 0) && (n `mod` 2 == 0) && (lst < 0) = False
-    | abs (treedepth - abs(x)) > 1 = False
+    | abs (treedepth - abs(x)) > 0 = False
     | otherwise = subIsCompleteBinaryVerify xs (n + 1) x treedepth
 
 findMaxDepthBinaryTree :: (MyTree Char) -> Int
