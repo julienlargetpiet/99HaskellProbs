@@ -1005,6 +1005,11 @@ cbalTree n = if n `mod` 2 == 1 then
              concat [ [MyNode 'x' l r, MyNode 'x' r l] | l <- cbalTree ((n - 1) `div` 2), 
                                                          r <- cbalTree (n `div` 2) ]
 
+
+--[MyNode 'x' (MyNode 'x' (MyNode 'x' (MyNode 'x' MyEmpty MyEmpty) (MyNode 'x' MyEmpty MyEmpty)) (MyNode 'x' (MyNode 'x' MyEmpty MyEmpty) (MyNode 'x' MyEmpty MyEmpty))) (MyNode 'x' (MyNode 'x' (MyNode 'x' MyEmpty MyEmpty) (MyNode 'x' MyEmpty MyEmpty)) (MyNode 'x' (MyNode 'x' MyEmpty MyEmpty) (MyNode 'x' MyEmpty MyEmpty)))]
+--
+--MyNode 'x' (MyNode 'x' (MyNode 'x' (MyNode 'x' MyEmpty MyEmpty) (MyNode 'x' MyEmpty MyEmpty)) (MyNode 'x' (MyNode 'x' MyEmpty MyEmpty) MyEmpty)) (MyNode 'x' (MyNode 'x' (MyNode 'x' MyEmpty MyEmpty) MyEmpty) (MyNode 'x' (MyNode 'x' MyEmpty MyEmpty) MyEmpty))
+
 -- 56
 
 isSymetric :: (Eq a) => (MyTree a) -> Bool
@@ -1075,6 +1080,100 @@ subHbalTree val n cmp tree
                          (subHbalTree val (n - 1) (cmp + 1) (MyNode val MyEmpty tree))
     where restTree _ 0   = MyEmpty
           restTree val n = MyNode val (restTree val (n - 1)) (restTree val (n - 1)) 
+
+--hbalTree2 x = map fst . hbalTree'
+--    where hbalTree' 0 = [(MyEmpty, 0)]
+--          hbalTree' 1 = [(MyNode x MyEmpty MyEmpty, 1)]
+--          hbalTree' n =
+--                let t = hbalTree' (n-2) ++ hbalTree' (n-1)
+--                in  [(MyNode x lb rb, h) | (lb,lh) <- t, (rb,rh) <- t
+--                                         , let h = 1 + max lh rh, h == n]
+
+hbalTree2 :: a -> Int -> [MyTree a]
+hbalTree2 x 0 = [MyEmpty]
+hbalTree2 x 1 = [MyNode x MyEmpty MyEmpty]
+hbalTree2 x h = [MyNode x l r |
+        (hl, hr) <- [(h-2, h-1), (h-1, h-1), (h-1, h-2)],
+        l <- hbalTree2 x hl, r <- hbalTree2 x hr]
+
+--MyNode 'X' (MyNode 'X' MyEmpty (MyNode 'X' MyEmpty MyEmpty)) (MyNode 'X' (MyNode 'X' MyEmpty MyEmpty) (MyNode 'X' MyEmpty (MyNode 'X' MyEmpty MyEmpty)))
+--
+--MyNode 'X' (MyNode 'X' (MyNode 'X' (MyNode 'X' MyEmpty MyEmpty) MyEmpty) (MyNode 'X' MyEmpty MyEmpty)) (MyNode 'X' (MyNode 'X' MyEmpty MyEmpty) (MyNode 'X' MyEmpty MyEmpty))
+
+-- 60
+
+minNodes :: Int -> Int
+minNodes 1 = 1
+minNodes n = subMinNodes (n - 2)
+
+subMinNodes :: Int -> Int
+subMinNodes 0 = 1 + 1
+subMinNodes n = 2^n + subMinNodes (n - 1)
+
+maxHeight :: Int -> Int
+maxHeight n = subMaxHeight n 1 1
+
+subMaxHeight :: Int -> Int -> Int -> Int
+subMaxHeight n n2 n3
+    | n - n3 >= 0 = 
+        let nodes = minNodes (n2 + 1)
+        in subMaxHeight n (n2 + 1) nodes
+    | otherwise = (n2 - 1)
+
+-- ...
+
+-- 61
+
+tree4 = MyNode 1 (MyNode 2 MyEmpty (MyNode 4 MyEmpty MyEmpty))
+                 (MyNode 2 MyEmpty MyEmpty)
+
+countLeaves :: (MyTree a) -> Int
+countLeaves MyEmpty = 0
+countLeaves (MyNode _ MyEmpty MyEmpty) = 1
+countLeaves (MyNode _ l r) = countLeaves l + countLeaves r
+
+-- 61A
+
+grepLeaves :: (MyTree a) -> [a]
+grepLeaves MyEmpty = []
+grepLeaves (MyNode x MyEmpty MyEmpty) = [x]
+grepLeaves (MyNode _ l r) = grepLeaves l ++ grepLeaves r
+
+
+-- 62
+
+grepNonEmpty :: (MyTree a) -> [a]
+grepNonEmpty MyEmpty = []
+grepNonEmpty (MyNode _ MyEmpty MyEmpty) = []
+grepNonEmpty (MyNode x l r) = [x] ++ grepNonEmpty l ++ grepNonEmpty r
+
+
+-- 62B
+
+atLevel :: (MyTree a) -> Int -> [a]
+atLevel tree lvl = subAtLevel tree lvl 1
+
+subAtLevel :: (MyTree a) -> Int -> Int -> [a]
+subAtLevel (MyNode x l r) n n2
+    | n /= n2 = subAtLevel l n (n2 + 1) ++ subAtLevel r n (n2 + 1)
+    | otherwise = [x]
+
+
+-- 63
+
+completeBinaryTree :: Int -> (MyTree Char)
+completeBinaryTree n = subCompleteBinaryTree (n - 1)
+
+subCompleteBinaryTree :: Int -> (MyTree Char)
+subCompleteBinaryTree 0 = MyEmpty
+subCompleteBinaryTree 1 = MyNode 'X' MyEmpty MyEmpty
+subCompleteBinaryTree n = 
+    let nr = n `div` 2
+        nl = n - nr 
+        l = completeBinaryTree nl
+        r = completeBinaryTree nr
+    in MyNode 'X' l r
+
 
 
 
