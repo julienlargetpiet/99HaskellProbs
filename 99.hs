@@ -1176,21 +1176,32 @@ subCompleteBinaryTree n =
 
 --MyNode 'X' (MyNode 'X' (MyNode 'X' (MyNode 'X' MyEmpty MyEmpty) MyEmpty) (MyNode 'X' MyEmpty MyEmpty)) (MyNode 'X' (MyNode 'X' MyEmpty MyEmpty) (MyNode 'X' MyEmpty MyEmpty))
 
---isCompleteBinary :: (MyTree Char) -> Bool
---isCompleteBinary tree = 
---    let xs = subIsCompleteBinary tree 0
---    in subIsCompleteBinaryVerify xs 0 0
+isCompleteBinary :: (MyTree Char) -> Bool
+isCompleteBinary tree = 
+    let treedepth = findMaxDepthBinaryTree tree
+        xs = subIsCompleteBinary tree 1 treedepth
+    in subIsCompleteBinaryVerify (tail xs) 2 (head xs) (treedepth - 1)
 
---subIsCompleteBinary :: (MyTree Char) -> Int -> [Int]
---subIsCompleteBinary MyEmpty n = [-2^n]
---subIsCompleteBinary (MyNode _ MyEmpty MyEmpty) n = [2^n]
---subIsCompleteBinary (MyNode _ l r) n = subIsCompleteBinary l (n + 1) ++ subIsCompleteBinary r (n + 1)
---
---subIsCompleteBinaryVerify :: [Int] -> Int -> Int -> Bool
---subIsCompleteBinaryVerify (x:xs) n lst
---    | (x < 0) `myAnd` (lst < 0)
---    |
---    |
+subIsCompleteBinary :: (MyTree Char) -> Int -> Int -> [Int]
+subIsCompleteBinary MyEmpty n _ = [-n + 1]
+subIsCompleteBinary (MyNode _ MyEmpty MyEmpty) n treedepth = if n == treedepth
+                                                             then [n]
+                                                             else  [-n, -n]
+subIsCompleteBinary (MyNode _ l r) n treedepth = subIsCompleteBinary l (n + 1) treedepth ++ subIsCompleteBinary r (n + 1) treedepth
+
+subIsCompleteBinaryVerify :: [Int] -> Int -> Int -> Int -> Bool
+subIsCompleteBinaryVerify [] _ _ _ = True
+subIsCompleteBinaryVerify (x:xs) n lst treedepth
+    | (x > 0) && (n `mod` 2 == 0) && (lst < 0) = False
+    | abs (treedepth - abs(x)) > 1 = False
+    | otherwise = subIsCompleteBinaryVerify xs (n + 1) x treedepth
+
+findMaxDepthBinaryTree :: (MyTree Char) -> Int
+findMaxDepthBinaryTree tree = subFindMaxDepthBinaryTree tree 0
+
+subFindMaxDepthBinaryTree :: (MyTree Char) -> Int -> Int
+subFindMaxDepthBinaryTree MyEmpty n = n
+subFindMaxDepthBinaryTree (MyNode _ l r) n = subFindMaxDepthBinaryTree l (n + 1)
 
 
 
