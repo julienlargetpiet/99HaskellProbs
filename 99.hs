@@ -1162,18 +1162,35 @@ subAtLevel (MyNode x l r) n n2
 -- 63
 
 completeBinaryTree :: Int -> (MyTree Char)
-completeBinaryTree n = subCompleteBinaryTree (n - 1)
+completeBinaryTree n = subCompleteBinaryTree n
 
 subCompleteBinaryTree :: Int -> (MyTree Char)
 subCompleteBinaryTree 0 = MyEmpty
 subCompleteBinaryTree 1 = MyNode 'X' MyEmpty MyEmpty
 subCompleteBinaryTree n = 
-    let nr = n `div` 2
-        nl = n - nr 
-        l = completeBinaryTree nl
-        r = completeBinaryTree nr
+    let nr = (n - 1) `div` 2
+        nl = (n - 1) - nr 
+        l = subCompleteBinaryTree nl
+        r = subCompleteBinaryTree nr
     in MyNode 'X' l r
 
+--MyNode 'X' (MyNode 'X' (MyNode 'X' (MyNode 'X' MyEmpty MyEmpty) MyEmpty) (MyNode 'X' MyEmpty MyEmpty)) (MyNode 'X' (MyNode 'X' MyEmpty MyEmpty) (MyNode 'X' MyEmpty MyEmpty))
+
+--isCompleteBinary :: (MyTree Char) -> Bool
+--isCompleteBinary tree = 
+--    let xs = subIsCompleteBinary tree 0
+--    in subIsCompleteBinaryVerify xs 0 0
+
+--subIsCompleteBinary :: (MyTree Char) -> Int -> [Int]
+--subIsCompleteBinary MyEmpty n = [-2^n]
+--subIsCompleteBinary (MyNode _ MyEmpty MyEmpty) n = [2^n]
+--subIsCompleteBinary (MyNode _ l r) n = subIsCompleteBinary l (n + 1) ++ subIsCompleteBinary r (n + 1)
+--
+--subIsCompleteBinaryVerify :: [Int] -> Int -> Int -> Bool
+--subIsCompleteBinaryVerify (x:xs) n lst
+--    | (x < 0) `myAnd` (lst < 0)
+--    |
+--    |
 
 
 
