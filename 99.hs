@@ -977,9 +977,9 @@ subHuffmanTree3 (Node _ l r) hs = subHuffmanTree3 l (hs ++ ['0']) ++ subHuffmanT
 
 --Count how many nodes a full tree has given its depth
 
-countNodes :: Int -> Int
-countNodes 0 = 1
-countNodes n = 2 ^ n + (countNodes (n - 1))
+countNodesBinary :: Int -> Int
+countNodesBinary 0 = 1
+countNodesBinary n = 2 ^ n + (countNodesBinary (n - 1))
 
 -- 55 all permutations from 1 Node = (n - 1) permutations where n is the dept level
 
@@ -1203,10 +1203,58 @@ subFindMaxDepthBinaryTree :: (MyTree Char) -> Int -> Int
 subFindMaxDepthBinaryTree MyEmpty n = n
 subFindMaxDepthBinaryTree (MyNode _ l r) n = subFindMaxDepthBinaryTree l (n + 1)
 
+-- 64
 
+tree64 = MyNode 'n'
+                (MyNode 'k'
+                        (MyNode 'c'
+                                (MyNode 'a' MyEmpty MyEmpty)
+                                (MyNode 'h'
+                                        (MyNode 'g'
+                                                (MyNode 'e' MyEmpty MyEmpty)
+                                                MyEmpty
+                                        )
+                                        MyEmpty
+                                )
+                        )
+                        (MyNode 'm' MyEmpty MyEmpty)
+                )
+                (MyNode 'u'
+                        (MyNode 'p'
+                                MyEmpty
+                                (MyNode 's'
+                                        (MyNode 'q' MyEmpty MyEmpty)
+                                        MyEmpty
+                                )
+                        )
+                        MyEmpty
+                )
 
+-- data Direction = L | R deriving (Eq)
 
+layout :: (MyTree Char) -> [(Char, (Int, Int))]
+layout tree = subLayout tree 0 0 [] 0
 
+subLayout :: (MyTree Char) -> Int -> Int 
+             -> [(Char, (Int, Int))] -> Int -> [(Char, (Int, Int))]
+subLayout MyEmpty _ _ xs _ = xs
+subLayout (MyNode x l r) depth pos xs lastright = 
+    let newpos = (countNodes l) + 1
+        newdepth = depth + 1
+        lval   = subLayout l newdepth newpos ((x, (newpos + lastright, newdepth)):xs) lastright
+        rval   = subLayout r newdepth (pos + newpos) [] (lastright + newpos)
+    in lval ++ rval
+
+--subLayout2 :: (MyTree Char) -> Int -> Int -> [(Char, (Int, Int))] -> [(Char, (Int, Int))]
+--subLayout2 MyEmpty _ _ xs = xs
+--subLayout2 (MyNode )
+
+countNodes :: (MyTree Char) -> Int
+countNodes tree = subCountNodes tree - 1
+
+subCountNodes :: (MyTree Char) -> Int
+subCountNodes MyEmpty = 1
+subCountNodes (MyNode _ l r) = (subCountNodes l) + (subCountNodes r)
 
 
 
