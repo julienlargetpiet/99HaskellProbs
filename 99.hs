@@ -1178,7 +1178,7 @@ subCompleteBinaryTree n =
 
 isCompleteBinary :: (MyTree Char) -> Bool
 isCompleteBinary tree = 
-    let treedepth = findMaxDepthBinaryTree tree
+    let treedepth = findMaxDepthBinaryTreeHbal tree
         xs = subIsCompleteBinary tree 1 treedepth
     in subIsCompleteBinaryVerify (tail xs) 2 (head xs) (treedepth - 1)
 
@@ -1196,12 +1196,12 @@ subIsCompleteBinaryVerify (x:xs) n lst treedepth
     | abs (treedepth - abs(x)) > 0 = False
     | otherwise = subIsCompleteBinaryVerify xs (n + 1) x treedepth
 
-findMaxDepthBinaryTree :: (MyTree Char) -> Int
-findMaxDepthBinaryTree tree = subFindMaxDepthBinaryTree tree 0
+findMaxDepthBinaryTreeHbal :: (MyTree Char) -> Int
+findMaxDepthBinaryTreeHbal tree = subFindMaxDepthBinaryTreeHbal tree 0
 
-subFindMaxDepthBinaryTree :: (MyTree Char) -> Int -> Int
-subFindMaxDepthBinaryTree MyEmpty n = n
-subFindMaxDepthBinaryTree (MyNode _ l r) n = subFindMaxDepthBinaryTree l (n + 1)
+subFindMaxDepthBinaryTreeHbal :: (MyTree Char) -> Int -> Int
+subFindMaxDepthBinaryTreeHbal MyEmpty n = n
+subFindMaxDepthBinaryTreeHbal (MyNode _ l r) n = subFindMaxDepthBinaryTreeHbal l (n + 1)
 
 -- 64
 
@@ -1230,8 +1230,6 @@ tree64 = MyNode 'n'
                         MyEmpty
                 )
 
--- data Direction = L | R deriving (Eq)
-
 layout :: (MyTree Char) -> [(Char, (Int, Int))]
 layout tree = subLayout tree 0 0 [] 0
 
@@ -1239,15 +1237,11 @@ subLayout :: (MyTree Char) -> Int -> Int
              -> [(Char, (Int, Int))] -> Int -> [(Char, (Int, Int))]
 subLayout MyEmpty _ _ xs _ = xs
 subLayout (MyNode x l r) depth pos xs lastright = 
-    let newpos = (countNodes l) + 1
+    let newpos = subCountNodes l
         newdepth = depth + 1
         lval   = subLayout l newdepth newpos ((x, (newpos + lastright, newdepth)):xs) lastright
         rval   = subLayout r newdepth (pos + newpos) [] (lastright + newpos)
     in lval ++ rval
-
---subLayout2 :: (MyTree Char) -> Int -> Int -> [(Char, (Int, Int))] -> [(Char, (Int, Int))]
---subLayout2 MyEmpty _ _ xs = xs
---subLayout2 (MyNode )
 
 countNodes :: (MyTree Char) -> Int
 countNodes tree = subCountNodes tree - 1
@@ -1255,6 +1249,47 @@ countNodes tree = subCountNodes tree - 1
 subCountNodes :: (MyTree Char) -> Int
 subCountNodes MyEmpty = 1
 subCountNodes (MyNode _ l r) = (subCountNodes l) + (subCountNodes r)
+
+-- 65
+
+tree65 = MyNode 'n'
+                (MyNode 'k'
+                        (MyNode 'c'
+                                (MyNode 'a' MyEmpty MyEmpty)
+                                (MyNode 'e'
+                                        (MyNode 'd' MyEmpty MyEmpty)
+                                        (MyNode 'g' MyEmpty MyEmpty)
+                                )
+                        )
+                        (MyNode 'm' MyEmpty MyEmpty)
+                )
+                (MyNode 'u'
+                        (MyNode 'p'
+                                MyEmpty
+                                (MyNode 'q' MyEmpty MyEmpty)
+                        )
+                        MyEmpty
+                )
+
+findMaxDepthBinaryTree :: (MyTree Char) -> Int
+findMaxDepthBinaryTree tree = myMax $ subFindMaxDepthBinaryTree tree 0
+
+subFindMaxDepthBinaryTree :: (MyTree Char) -> Int -> [Int]
+subFindMaxDepthBinaryTree MyEmpty n = [n]
+subFindMaxDepthBinaryTree (MyNode _ l r) n = subFindMaxDepthBinaryTree l (n  + 1) ++ subFindMaxDepthBinaryTree r (n + 1)
+
+findMaxDepthBinaryTree2 :: (MyTree Char) -> Int
+findMaxDepthBinaryTree2 tree = subFindMaxDepthBinaryTree2 tree 0
+
+subFindMaxDepthBinaryTree2 :: (MyTree Char) -> Int -> Int
+subFindMaxDepthBinaryTree2 MyEmpty n = n
+subFindMaxDepthBinaryTree2 (MyNode _ l r) n = 
+    let val1 = subFindMaxDepthBinaryTree2 l (n + 1)
+        val2 = subFindMaxDepthBinaryTree2 r (n + 1)
+    in max val1 val2
+
+
+
 
 
 
