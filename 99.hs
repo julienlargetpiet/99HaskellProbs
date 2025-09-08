@@ -1433,6 +1433,38 @@ treeToString (MyNode x MyEmpty MyEmpty) = [x]
 treeToString MyEmpty = []
 treeToString (MyNode x l r) = [x] ++ ['('] ++ treeToString l ++ [','] ++ treeToString r ++ [')']
 
+-- 70C
+
+data MTree a = MNode a [MTree a] deriving (Show, Eq)
+
+mtree1 = MNode 'a' []
+
+mtree2 = MNode 'a' [MNode 'b' []]
+
+mtree3 = MNode 'a' [MNode 'b' [MNode 'c' []]]
+
+mtree4 = MNode 'b' [MNode 'd' [], MNode 'e' []]
+
+mtree5 = MNode 'a' [
+                MNode 'f' [MNode 'g' []],
+                MNode 'c' [],
+                MNode 'b' [MNode 'd' [], MNode 'e' []]
+                ]
+
+mnodes :: (MTree a) -> Int
+mnodes mtree = subMNodes mtree + 1
+
+subMNodes :: (MTree a) -> Int
+subMNodes (MNode _ next) = foldl (\acc x -> acc + 1 + subMNodes x) 0 next
+
+
+
+
+
+
+
+
+
 
 
 
