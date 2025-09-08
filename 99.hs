@@ -1314,9 +1314,50 @@ spaceCalc MyEmpty _ _ = 0
 spaceCalc (MyNode _ MyEmpty _) _ n2 = n2
 spaceCalc (MyNode x l r) n n2 = (spaceCalc l (n - 1) (n2 + 2^n `div` 4))
 
+-- 66
 
+layout3 :: (MyTree Char) -> [(Char, (Int, Int))]
+layout3 tree = subLayout3a tree [] 0 0 False False 0
 
+subLayout3a :: (MyTree Char) -> [(Char, (Int, Int))] -> 
+                Int -> Int -> Bool -> Bool -> Int -> [(Char, (Int, Int))]
+subLayout3a MyEmpty xs _ _ _ _ _ = xs
+subLayout3a (MyNode x l r) xs depth lastright fromright alrd lastval = 
+    let val = if not alrd
+              then subLayout3Preb (MyNode x l r) + 1
+              else if fromright
+                   then lastright + lastval
+                   else lastright - lastval
+        newdepth = depth + 1
+        newlastval = subLayout3b (MyNode x l r)
+    in subLayout3a l ((x, (val, newdepth)):xs) newdepth val False alrd newlastval ++ subLayout3a r [] newdepth val True True newlastval
 
+subLayout3Preb :: (MyTree Char) -> Int
+subLayout3Preb tree = (subLayout3Preb2 tree)
+
+subLayout3Preb2 :: (MyTree Char) -> Int
+subLayout3Preb2 MyEmpty = 0
+subLayout3Preb2 (MyNode _ MyEmpty _) = 0
+subLayout3Preb2 (MyNode x l r) = subLayout3b (MyNode x l r) + subLayout3Preb2 l
+
+subLayout3b :: (MyTree Char) -> Int
+subLayout3b (MyNode _ _ MyEmpty) = 1
+subLayout3b (MyNode _ MyEmpty _) = 1
+subLayout3b (MyNode _ l r) = (min (subLayout3bLeft l 1) (subLayout3bRight r 1))
+
+subLayout3bRight :: (MyTree Char) -> Int -> Int
+subLayout3bRight (MyNode _ MyEmpty _) n = n
+subLayout3bRight (MyNode _ l _) n = subLayout3bRight l (n + 1)
+
+subLayout3bLeft :: (MyTree Char) -> Int -> Int
+subLayout3bLeft (MyNode _ _ MyEmpty) n = n
+subLayout3bLeft (MyNode _ _ r) n = subLayout3bLeft r (n + 1)
+
+findLastVal :: (MyTree Char) -> (MyTree Char) -> Int
+findLastVal MyEmpty MyEmpty = 0
+findLastVal _ MyEmpty       = 1
+findLastVal MyEmpty _       = 1
+findLastVal _ _ = 2
 
 
 
