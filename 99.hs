@@ -1428,11 +1428,10 @@ stringToTree xs =
                  else rlist
     in MyNode val (stringToTree llist2) (stringToTree rlist2)
 
---stringToTree :: [Char] -> (MyTree Char)
---stringToTree xs =
---    let x1 = 'A'
---        x2 = 'B'
---    in MyNode 'Q' (MyNode x1 MyEmpty MyEmpty) (MyNode x2 MyEmpty MyEmpty)
+treeToString :: (MyTree Char) -> [Char]
+treeToString (MyNode x MyEmpty MyEmpty) = [x]
+treeToString MyEmpty = []
+treeToString (MyNode x l r) = [x] ++ ['('] ++ treeToString l ++ [','] ++ treeToString r ++ [')']
 
 
 
