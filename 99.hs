@@ -1288,6 +1288,37 @@ subFindMaxDepthBinaryTree2 (MyNode _ l r) n =
         val2 = subFindMaxDepthBinaryTree2 r (n + 1)
     in max val1 val2
 
+layout2 :: (MyTree Char) -> [(Char, (Int, Int))]
+layout2 tree = 
+    let maxdepth = findMaxDepthBinaryTree2 tree
+    in subLayout2 tree maxdepth 0 0 False False
+        
+subLayout2 :: (MyTree Char) -> Int -> Int -> 
+                Int -> Bool -> Bool -> [(Char, (Int, Int))]
+subLayout2 MyEmpty _ _ _ _ _ = []
+subLayout2 (MyNode x l r) maxdepth depth lastright fromright alrd =
+    let newdepth = depth + 1
+        topval   = (2 ^ (maxdepth - newdepth) `div` 2)
+        val = if not fromright
+              then if not alrd
+                   then lastright + (spaceCalc l (maxdepth - newdepth) 1) + topval
+                   else lastright + (spaceCalc l (maxdepth - newdepth) 1)
+              else lastright + (2 ^ (maxdepth - newdepth + 1) `div` 2)
+        newlastright = if not fromright
+                       then lastright
+                       else val - topval
+    in [(x, (val, newdepth))] ++ (subLayout2 l maxdepth newdepth newlastright False alrd) ++ (subLayout2 r maxdepth newdepth val True True)
+
+spaceCalc :: (MyTree Char) -> Int -> Int -> Int
+spaceCalc MyEmpty _ _ = 0
+spaceCalc (MyNode _ MyEmpty _) _ n2 = n2
+spaceCalc (MyNode x l r) n n2 = (spaceCalc l (n - 1) (n2 + 2^n `div` 4))
+
+
+
+
+
+
 
 
 
