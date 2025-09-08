@@ -3,6 +3,17 @@ import qualified System.Random as R
 
 -- helpers
 
+stopAt :: (Eq a) => a -> Int -> [a] -> Int
+stopAt cmp n xs = subStopAt cmp n xs 0 0
+
+subStopAt :: (Eq a) => a -> Int -> [a] -> Int -> Int -> Int
+subStopAt _ _ [] _ _ = -1
+subStopAt cmp n (x:xs) n2 n3
+    | cmp == x = if n2 + 1 == n
+                 then n3
+                 else subStopAt cmp n xs (n2 + 1) (n3 + 1)
+    | otherwise = subStopAt cmp n xs n2 (n3 + 1)
+
 unique :: (Eq a) => [a] -> [a]
 unique xs = subUnique xs []
 
@@ -1359,6 +1370,69 @@ findLastVal _ MyEmpty       = 1
 findLastVal MyEmpty _       = 1
 findLastVal _ _ = 2
 
+
+-- 67A
+
+parTokenizer :: [Char] -> ([Int], [Int])
+parTokenizer xs = subParTokenizer xs 0 0 [] []
+
+subParTokenizer :: [Char] -> Int -> Int -> [Int] -> [Int] -> ([Int], [Int])
+subParTokenizer [] _ _ ids parxs = (ids, parxs)
+subParTokenizer (x:xs) idx parnb ids parxs
+    | x == '('  = subParTokenizer xs (idx + 1) (parnb + 1) (ids ++ [idx]) (parxs ++ [parnb])
+    | x == ')'  = subParTokenizer xs (idx + 1) (parnb - 1) (ids ++ [idx]) (parxs ++ [parnb - 1])
+    | otherwise = subParTokenizer xs (idx + 1) parnb ids parxs
+
+testString :: [Char]
+testString = "a(b(d,e),c(i(i,i),f(g,k)))"
+
+testString1 :: [Char]
+testString1 = "a(b(d,e),c(,f(g,k)))"
+
+testString1b :: [Char]
+testString1b = "a(b(d,e),c(,f(,)))"
+
+testString2 :: [Char]
+testString2 = "a(b(d,e),c(p,g))"
+
+testString3 :: [Char]
+testString3 = "a(b,c)"
+
+stringToTree :: [Char] -> (MyTree Char)
+stringToTree [] = MyEmpty
+stringToTree [x] = MyNode x MyEmpty MyEmpty
+stringToTree xs =
+    let val = head xs
+        interxs = init . tail . tail $ xs 
+        (ids, parxs) = parTokenizer interxs
+        zeroids = reverse $ grepn2 0 parxs
+        newids = getRangeList ids zeroids
+        newparxs = getRangeList parxs zeroids
+        idx = if length newids > 2
+              then ids !! (stopAt 0 3 newparxs)
+              else if length newids == 0
+                   then if head interxs == ','
+                        then 1
+                        else 3
+                   else if head interxs == ','
+                   then 1
+                   else length (interxs) + 1
+        (llist, rlist) = splitAt (idx - 1) interxs
+        llist2 = if length llist > 0
+                 then init llist
+                 else []
+        rlist2 = if length rlist > 0
+                 then if head rlist == ','
+                      then tail rlist
+                      else rlist
+                 else rlist
+    in MyNode val (stringToTree llist2) (stringToTree rlist2)
+
+--stringToTree :: [Char] -> (MyTree Char)
+--stringToTree xs =
+--    let x1 = 'A'
+--        x2 = 'B'
+--    in MyNode 'Q' (MyNode x1 MyEmpty MyEmpty) (MyNode x2 MyEmpty MyEmpty)
 
 
 
