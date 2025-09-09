@@ -1522,11 +1522,12 @@ path :: (Eq a) => a -> a -> [(a, a)] -> [[a]]
 path n1 n2 xs = subPath n1 n2 xs []
 
 subPath :: (Eq a) => a -> a -> [(a, a)] -> [a] -> [[a]]
-subPath n1 n2 [] outxs = []
 subPath n1 n2 xs outxs
     | n1 /= n2 = 
         let newxs = filter (\(val1, _) -> val1 == n1) xs
-        in concat $ map (\(_, newn1) -> subPath newn1 n2 xs (outxs ++ [n1])) newxs
+        in if not . null $ newxs
+           then concat $ map (\(_, newn1) -> subPath newn1 n2 xs (outxs ++ [n1])) newxs
+           else []
     | otherwise = [outxs ++ [n2]]
         
 
@@ -1535,8 +1536,27 @@ subPath n1 n2 xs outxs
 myPath2 :: [(Int, Int)]
 myPath2 = [(1,2),(2,3),(1,3),(3,4),(4,2),(5,6)]
 
+myCycle :: (Eq a) => a -> [(a, a)] -> [a]
+myCycle x xs = head $ subCycle x x xs [] False
 
---cycle :: (Eq a) => a -> [(a, a)] -> [a]
+subCycle :: (Eq a) => a -> a -> [(a, a)] -> [a] -> Bool -> [[a]]
+subCycle _ _ [] _ _ = []
+subCycle x cmp xs outxs alrd
+    | x /= cmp  = 
+        let newxs = filter (\(val1, _) -> val1 == x) xs
+        in if not . null $ newxs
+           then concat $ map (\(_, n2) -> subCycle n2 cmp xs (outxs ++ [x]) True) newxs
+           else []
+    | otherwise = if alrd
+                  then [outxs ++ [cmp]]
+                  else let newxs = filter (\(val1, _) -> val1 == x) xs
+                       in if not . null $ xs
+                          then concat $ map (\(_, n2) -> subCycle n2 cmp xs (outxs ++ [x]) True) newxs
+                          else []
+
+
+
+
 
 
 
