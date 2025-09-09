@@ -1537,21 +1537,25 @@ myPath2 :: [(Int, Int)]
 myPath2 = [(1,2),(2,3),(1,3),(3,4),(4,2),(5,6)]
 
 myCycle :: (Eq a) => a -> [(a, a)] -> [a]
-myCycle x xs = head $ subCycle x x xs [] False
+myCycle x xs = 
+    let outxs = subCycle x x xs [] False 0 (length xs)
+    in if null outxs
+       then []
+       else head outxs
 
-subCycle :: (Eq a) => a -> a -> [(a, a)] -> [a] -> Bool -> [[a]]
-subCycle _ _ [] _ _ = []
-subCycle x cmp xs outxs alrd
+subCycle :: (Eq a) => a -> a -> [(a, a)] -> [a] -> Bool -> Int -> Int -> [[a]]
+subCycle _ _ [] _ _ _ _ = []
+subCycle x cmp xs outxs alrd n cmp2
     | x /= cmp  = 
         let newxs = filter (\(val1, _) -> val1 == x) xs
-        in if not . null $ newxs
-           then concat $ map (\(_, n2) -> subCycle n2 cmp xs (outxs ++ [x]) True) newxs
+        in if (not . null $ newxs) && n < cmp2
+           then concat $ map (\(_, n2) -> subCycle n2 cmp xs (outxs ++ [x]) True (n + 1) cmp2) newxs
            else []
     | otherwise = if alrd
                   then [outxs ++ [cmp]]
                   else let newxs = filter (\(val1, _) -> val1 == x) xs
-                       in if not . null $ xs
-                          then concat $ map (\(_, n2) -> subCycle n2 cmp xs (outxs ++ [x]) True) newxs
+                       in if not . null $ newxs
+                          then concat $ map (\(_, n2) -> subCycle n2 cmp xs (outxs ++ [x]) True (n + 1) cmp2) newxs
                           else []
 
 
