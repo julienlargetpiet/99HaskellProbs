@@ -1513,6 +1513,25 @@ graphToAdj ((x:xs), xs2) =
     in [(x, fstval ++ sndval)] ++ graphToAdj (xs, xs2)
 
 
+-- 81
+
+myPath :: [(Int, Int)]
+myPath = [(1,2), (2,3), (1,3), (3,4), (4,2), (5,6)]
+
+
+
+subPath :: (Eq a) => a -> a -> [(a, a)] -> [a] -> [[a]]
+subPath n1 n2 [] outxs = []
+subPath n1 n2 xs outxs
+    | n1 /= n2 = 
+        let newxs = filter (\(val1, _) -> val1 == n1) xs
+        in concat $ map (\(_, newn1) -> subPath newn1 n2 xs (outxs ++ [n1])) newxs
+    | otherwise = [outxs ++ [n2]]
+        
+
+
+
+
 
 
 
