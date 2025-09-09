@@ -1484,6 +1484,12 @@ ipl mtree = subIpl mtree 1
 subIpl :: (MTree a) -> Int -> Int
 subIpl (MNode _ next) n = foldl (\acc x -> acc + n + subIpl x (n + 1)) 0 next
 
+-- 72
+
+bottom_up :: (MTree Char) -> [Char]
+bottom_up (MNode x restxs) = concat (map bottom_up restxs) ++ [x]
+
+
 
 
 
