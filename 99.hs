@@ -1518,7 +1518,8 @@ graphToAdj ((x:xs), xs2) =
 myPath :: [(Int, Int)]
 myPath = [(1,2), (2,3), (1,3), (3,4), (4,2), (5,6)]
 
-
+path :: (Eq a) => a -> a -> [(a, a)] -> [[a]]
+path n1 n2 xs = subPath n1 n2 xs []
 
 subPath :: (Eq a) => a -> a -> [(a, a)] -> [a] -> [[a]]
 subPath n1 n2 [] outxs = []
@@ -1529,6 +1530,13 @@ subPath n1 n2 xs outxs
     | otherwise = [outxs ++ [n2]]
         
 
+-- 82
+
+myPath2 :: [(Int, Int)]
+myPath2 = [(1,2),(2,3),(1,3),(3,4),(4,2),(5,6)]
+
+
+--cycle :: (Eq a) => a -> [(a, a)] -> [a]
 
 
 
