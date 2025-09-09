@@ -1458,7 +1458,22 @@ subMNodes :: (MTree a) -> Int
 subMNodes (MNode _ next) = foldl (\acc x -> acc + 1 + subMNodes x) 0 next
 
 
+-- 70, revisited lol
 
+stringmtree = "afg^^c^bd^e^^"
+
+stringToMTree :: [Char] -> (MTree Char)
+stringToMTree (x:xs) = subStringToMTree xs [MNode x []]
+
+subStringToMTree :: [Char] -> [(MTree Char)] -> (MTree Char)
+subStringToMTree [] [mtree] = mtree
+subStringToMTree (x:xs) trees
+    | x /= '^'  = subStringToMTree xs ((MNode x []):trees)
+    | otherwise = 
+        let lastnode = head trees
+            (MNode x restxs) = head . tail $ trees
+            newnode = MNode x (restxs ++ [lastnode])
+        in subStringToMTree xs (newnode:(tail . tail $ trees))
 
 
 
