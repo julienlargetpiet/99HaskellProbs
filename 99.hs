@@ -1489,7 +1489,28 @@ subIpl (MNode _ next) n = foldl (\acc x -> acc + n + subIpl x (n + 1)) 0 next
 bottom_up :: (MTree Char) -> [Char]
 bottom_up (MNode x restxs) = concat (map bottom_up restxs) ++ [x]
 
+-- 73
 
+display :: (MTree Char) -> [Char]
+display (MNode x []) = [' ', x]
+display (MNode x restxs) = ['('] ++ [x] ++ [' '] ++ concat (map display restxs) ++ [')']
+
+
+-- 80, Wooooow that was wayyy more straightforward than the current solution on haskell.org lol
+
+type Graph = ([Char], [(Char, Char)])
+
+mygraph :: Graph
+mygraph = (['b','c','d','f','g','h','k'], [('b','c'),('b','f'),('c','f'),('f','k'),('g','h')])
+
+type Adj = [(Char, [Char])]
+
+graphToAdj :: Graph -> Adj
+graphToAdj ([], xs2) = []
+graphToAdj ((x:xs), xs2) =
+    let fstval = map snd (filter (\(val1, _) -> val1 == x) xs2)
+        sndval = map fst (filter (\(_, val2) -> val2 == x) xs2)
+    in [(x, fstval ++ sndval)] ++ graphToAdj (xs, xs2)
 
 
 
