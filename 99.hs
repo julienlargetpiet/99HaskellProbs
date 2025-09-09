@@ -1515,8 +1515,8 @@ graphToAdj ((x:xs), xs2) =
 
 -- 81
 
-myPath :: [(Int, Int)]
-myPath = [(1,2), (2,3), (1,3), (3,4), (4,2), (5,6)]
+myGraph :: [(Int, Int)]
+myGraph = [(1,2), (2,3), (1,3), (3,4), (4,2), (5,6)]
 
 path :: (Eq a) => a -> a -> [(a, a)] -> [[a]]
 path n1 n2 xs = subPath n1 n2 xs []
@@ -1533,8 +1533,8 @@ subPath n1 n2 xs outxs
 
 -- 82
 
-myPath2 :: [(Int, Int)]
-myPath2 = [(1,2),(2,3),(1,3),(3,4),(4,2),(5,6)]
+myGraph2 :: [(Int, Int)]
+myGraph2 = [(1,2),(2,3),(1,3),(3,4),(4,2),(5,6)]
 
 myCycle :: (Eq a) => a -> [(a, a)] -> [a]
 myCycle x xs = 
@@ -1559,14 +1559,41 @@ subCycle x cmp xs outxs alrd n cmp2
                           else []
 
 
+-- 83
 
+graph83 = Graph2 ['a','b','c','d','e','f','g','h'] [ ('a','b'), ('a','d')
+    , ('b','c'), ('b','e')
+    , ('c','e')
+    , ('d','e'), ('d','f'), ('d','g')
+    , ('e','h')
+    , ('f','g')
+    , ('g','h')
+    ]
 
+data Graph2 a = Graph2 [a] [(a, a)] deriving (Show, Eq)
 
+k4 = Graph2 ['a', 'b', 'c', 'd'] [('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'a'), ('a', 'c'), ('b', 'd')]
 
+paths' :: (Eq a) => a -> a -> [(a, a)] -> [[a]]
+paths' a b xs | a == b = [[a]]
+              | otherwise = concat [map (a :) $ paths' d b $ [x | x <- xs, x /= (c, d)]
+                                   | (c, d) <- xs, c == a] ++ 
+                            concat [map (a :) $ paths' c b $ [x | x <- xs, x /= (c, d)]
+                                   | (c, d) <- xs, d == a]
 
+cycle' :: (Eq a) => a -> [(a, a)] -> [[a]]
+cycle' a xs = [a : path | e <- xs, fst e == a, path <- paths' (snd e) a [x | x <- xs, x /= e]] ++
+              [a : path | e <- xs, snd e == a, path <- paths' (fst e) a [x | x <- xs, x /= e]]
 
-
-
+spantree :: (Eq a) => Graph2 a -> [Graph2 a]
+spantree (Graph2 xs ys) = filter (not . cycles) $ filter (nodes) alltrees
+   where
+      alltrees = [Graph2 (ns edges) edges | edges <- foldr acc [[]] ys]
+      acc e es = es ++ (map (e:) es)
+      ns e = foldr (\x xs -> if x `elem` xs then xs else x:xs) 
+             [] $ concat $ map (\(a, b) -> [a, b]) e
+      nodes (Graph2 xs' ys') = length xs - 1 == length ys'
+      cycles (Graph2 xs' ys') = any ((/=) 0 . length . flip cycle' ys') xs'
 
 
 
