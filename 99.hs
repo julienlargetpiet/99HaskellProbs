@@ -3,6 +3,18 @@ import qualified System.Random as R
 
 -- helpers
 
+myAny :: [Bool] -> Bool
+myAny [] = False
+myAny (x:xs)
+    | x = True
+    | otherwise = myAny xs
+
+myAll :: [Bool] -> Bool
+myAll [] = True
+myAll (x:xs)
+    | not x = False
+    | otherwise = myAll xs
+
 stopAt :: (Eq a) => a -> Int -> [a] -> Int
 stopAt cmp n xs = subStopAt cmp n xs 0 0
 
@@ -1536,6 +1548,9 @@ subPath n1 n2 xs outxs
 myGraph2 :: [(Int, Int)]
 myGraph2 = [(1,2),(2,3),(1,3),(3,4),(4,2),(5,6)]
 
+myGraph2b :: ([Int], [(Int, Int)])
+myGraph2b = ([1..6], [(1,2),(2,3),(1,3),(3,4),(4,2),(5,6)])
+
 myCycle :: (Eq a) => a -> [(a, a)] -> [a]
 myCycle x xs = 
     let outxs = subCycle x x xs [] False 0 (length xs)
@@ -1570,9 +1585,20 @@ graph83 = Graph2 ['a','b','c','d','e','f','g','h'] [ ('a','b'), ('a','d')
     , ('g','h')
     ]
 
+graph83b = (['a','b','c','d','e','f','g','h'], [ ('a','b'), ('a','d')
+    , ('b','c'), ('b','e')
+    , ('c','e')
+    , ('d','e'), ('d','f'), ('d','g')
+    , ('e','h')
+    , ('f','g')
+    , ('g','h')
+    ])
+
 data Graph2 a = Graph2 [a] [(a, a)] deriving (Show, Eq)
 
 k4 = Graph2 ['a', 'b', 'c', 'd'] [('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'a'), ('a', 'c'), ('b', 'd')]
+
+k4b = (['a', 'b', 'c', 'd'], [('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'a'), ('a', 'c'), ('b', 'd')])
 
 paths' :: (Eq a) => a -> a -> [(a, a)] -> [[a]]
 paths' a b xs | a == b = [[a]]
@@ -1592,8 +1618,56 @@ spantree (Graph2 xs ys) = filter (not . cycles) $ filter (nodes) alltrees
       acc e es = es ++ (map (e:) es)
       ns e = foldr (\x xs -> if x `elem` xs then xs else x:xs) 
              [] $ concat $ map (\(a, b) -> [a, b]) e
-      nodes (Graph2 xs' ys') = length xs - 1 == length ys'
+      nodes (Graph2 xs' ys') = length xs - 1 == length ys' && length xs' == length xs
       cycles (Graph2 xs' ys') = any ((/=) 0 . length . flip cycle' ys') xs'
+
+spantree2 :: ([Char], [(Char, Char)]) -> [([Char], [(Char, Char)])]
+spantree2 (xs, ys) = filter isConnected $ filter (noncycle) alltrees
+   where
+      alltrees = [((uniqueval edges), edges) | edges <- foldr acc [[]] ys]
+      acc e es = es ++ (map (e:) es)
+      uniqueval e = foldr (\x xs -> if x `elem` xs then xs else x:xs) 
+             [] (concat $ map (\(a, b) -> [a, b]) e)
+      noncycle (xs', ys') = length xs - 1 == length ys' && (length $ unique (xs')) == length xs
+
+isCycle :: (Eq a) => ([a], [(a, a)]) -> Bool
+isCycle ([], xs2) = False
+isCycle ((x:xs), xs2) = 
+    let outxs = myCycle x xs2
+    in if null outxs
+       then isCycle (xs, xs2)
+       else True
+
+testval = ("cbd", [('b','c'),('c','d'),('b','d')])
+
+
+isConnected :: (Eq a) => ([a], [(a, a)]) -> Bool
+isConnected (nodexs, edgexs) = 
+    let newedgexs = edgexs ++ (map (\(x, y) -> (y, x)) edgexs)
+        outxs = subIsConnected (nodexs, newedgexs) (length nodexs)
+    in  outxs
+
+subIsConnected :: (Eq a) => ([a], [(a, a)]) -> Int -> Bool
+subIsConnected ((fstval:nodexs), edgexs) cmp = 
+    let outxs = subIsConnected2 edgexs [fstval] fstval cmp 
+    in cmp == (length . unique $ outxs)
+
+subIsConnected2 :: (Eq a) => [(a, a)] -> [a] -> a -> Int -> [a]
+subIsConnected2 xs outxs n cmp
+    | length outxs == cmp = outxs
+    | otherwise = 
+        let newxs = filter (\(x, _) -> x == n) xs
+        in  if null newxs
+            then outxs
+            else concat $ map (\(_, x2) -> subIsConnected2 xs (x2:outxs) x2 cmp) newxs
+
+--subIsConnected :: (Eq a) => ([a], [(a, a)]) -> Int -> [Bool]
+--subIsConnected ([], _) _ = []
+--subIsConnected ((fstval:nodexs), edgexs) cmp = 
+--    let outxs = subIsConnected2 edgexs [fstval] fstval cmp 
+--    in [cmp == (length . unique $ outxs)] ++ subIsConnected (nodexs, edgexs) cmp
+
+
 
 
 
