@@ -1630,13 +1630,13 @@ spantree2 (xs, ys) = filter isConnected $ filter (noncycle) alltrees
              [] (concat $ map (\(a, b) -> [a, b]) e)
       noncycle (xs', ys') = length xs - 1 == length ys' && (length $ unique (xs')) == length xs
 
-isCycle :: (Eq a) => ([a], [(a, a)]) -> Bool
-isCycle ([], xs2) = False
-isCycle ((x:xs), xs2) = 
-    let outxs = myCycle x xs2
-    in if null outxs
-       then isCycle (xs, xs2)
-       else True
+--isCycle :: (Eq a) => ([a], [(a, a)]) -> Bool
+--isCycle ([], xs2) = False
+--isCycle ((x:xs), xs2) = 
+--    let outxs = myCycle x xs2
+--    in if null outxs
+--       then isCycle (xs, xs2)
+--       else True
 
 testval = ("cbd", [('b','c'),('c','d'),('b','d')])
 
@@ -1690,6 +1690,60 @@ subFindDirection2 xs outxs n cmp
         in  if null newxs
             then [outxs]
             else concat $ map (\(_, x2) -> subFindDirection2 xs (x2:outxs) x2 cmp) newxs
+
+
+-- 84
+
+graph84 = (['1','2','3','4','5'], [('1','2',12),('1','3',34),('1','5',78),('2','4',55),('2','5',32),('3','4',61),('3','5',44),('4','5',93)]) :: ([Char], [(Char, Char, Int)])
+
+minimalSpantree :: ([Char], [(Char, Char, Int)]) -> (([Char], [(Char, Char, Int)]), Int)
+minimalSpantree (xs, ys) = 
+    let preoutxs = map (\(nodesmp, xsmp) -> ((nodesmp, xsmp), (foldl (\acc (_, _, mpval) -> acc + mpval) 0 xsmp))) (filter isConnectedCalc $ filter (noncycle) alltrees)
+        vals = map (\(_, x) -> x) preoutxs
+        minval = myMin vals
+    in  head $ filter (\(_, x) -> x == minval) preoutxs
+   where
+      alltrees = [((uniqueval edges), edges) | edges <- foldr acc [[]] ys]
+      acc e es = es ++ (map (e:) es)
+      uniqueval e = foldr (\x xs -> if x `elem` xs then xs else x:xs) 
+             [] (concat $ map (\(a, b, _) -> [a, b]) e)
+      noncycle (xs', ys') = length xs - 1 == length ys' && (length $ unique (xs')) == length xs
+
+isConnectedCalc :: (Eq a) => ([a], [(a, a, Int)]) -> Bool
+isConnectedCalc (nodexs, edgexs) = 
+    let newedgexs = edgexs ++ (map (\(x, y, z) -> (y, x, z)) edgexs)
+        outxs = subIsConnectedCalc (nodexs, newedgexs) (length nodexs)
+    in  outxs
+
+subIsConnectedCalc :: (Eq a) => ([a], [(a, a, Int)]) -> Int -> Bool
+subIsConnectedCalc ((fstval:nodexs), edgexs) cmp = 
+    let outxs = subIsConnectedCalc2 edgexs [fstval] fstval cmp 
+    in cmp == (length . unique $ outxs)
+
+subIsConnectedCalc2 :: (Eq a) => [(a, a, Int)] -> [a] -> a -> Int -> [a]
+subIsConnectedCalc2 xs outxs n cmp
+    | length outxs == cmp = outxs
+    | otherwise = 
+        let newxs = filter (\(x, _, _) -> x == n) xs
+        in  if null newxs
+            then outxs
+            else concat $ map (\(_, x2, _) -> subIsConnectedCalc2 xs (x2:outxs) x2 cmp) newxs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
