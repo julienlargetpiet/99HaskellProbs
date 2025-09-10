@@ -1668,6 +1668,33 @@ subIsConnected2 xs outxs n cmp
 --    in [cmp == (length . unique $ outxs)] ++ subIsConnected (nodexs, edgexs) cmp
 
 
+-- Bonus question, find the directions of a graph
+
+findDirection :: (Eq a) => ([a], [(a, a)]) -> [[[a]]]
+findDirection (nodexs, edgexs) = 
+    let outxs = subFindDirection (nodexs, edgexs) (length nodexs)
+        newoutxs = filter (\(x1, _) -> x1) outxs
+    in  map snd newoutxs
+
+subFindDirection :: (Eq a) => ([a], [(a, a)]) -> Int -> [(Bool, [[a]])]
+subFindDirection ([], _) _ = []
+subFindDirection ((fstval:nodexs), edgexs) cmp = 
+    let outxs = subFindDirection2 edgexs [fstval] fstval cmp 
+    in [(cmp == (length . unique . concat $ outxs), outxs)] ++ (subFindDirection (nodexs, edgexs) cmp)
+
+subFindDirection2 :: (Eq a) => [(a, a)] -> [a] -> a -> Int -> [[a]]
+subFindDirection2 xs outxs n cmp
+    | length outxs == cmp = [outxs]
+    | otherwise = 
+        let newxs = filter (\(x, _) -> x == n) xs
+        in  if null newxs
+            then [outxs]
+            else concat $ map (\(_, x2) -> subFindDirection2 xs (x2:outxs) x2 cmp) newxs
+
+
+
+
+
 
 
 
