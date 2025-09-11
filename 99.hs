@@ -1,7 +1,16 @@
 import qualified System.Random as R
-
+import Data.List (permutations)
 
 -- helpers
+
+breakAt :: (Eq a) => [(a, a)] -> [[(a, a)]]
+breakAt xs = 
+    let uniquevals = unique $ map (\(val, _) -> val) xs
+    in subBreakAt uniquevals xs
+
+subBreakAt :: (Eq a) => [a] -> [(a, a)] -> [[(a, a)]]
+subBreakAt [] _ = []
+subBreakAt (x:xs) xs2 = [filter (\(val, _) -> val==x) xs2] ++ subBreakAt xs xs2
 
 myAny :: [Bool] -> Bool
 myAny [] = False
@@ -1730,13 +1739,74 @@ subIsConnectedCalc2 xs outxs n cmp
             else concat $ map (\(_, x2, _) -> subIsConnectedCalc2 xs (x2:outxs) x2 cmp) newxs
 
 
+-- 85
 
+graphG1 = ([1,2,3,4,5,6,7,8], [(1,5),(1,6),(1,7),(2,5),(2,6),(2,8),(3,5),(3,7),(3,8),(4,6),(4,7),(4,8)]) :: ([Int], [(Int, Int)])
 
+graphH1 = ([1,2,3,4,5,6,7,8], [(1,2),(1,4),(1,5),(6,2),(6,5),(6,7),(8,4),(8,5),(8,7),(3,2),(3,4),(3,7)]) :: ([Int], [(Int, Int)])
 
+ng1 = [1,2,3,4,5,6,7,8] :: [Int] 
+ng2 = [1,2,3,4,5,6,7,8] :: [Int]
+dgs = [2,3,3,2,3,2,3,3] :: [Int]
+dgs2 = [3,3,2,3,2,2,3,3] :: [Int]
 
+iso :: (Eq a) => ([a], [(a, a)]) -> ([a], [(a, a)]) -> ([(a, a)], Bool)
+iso (n1, ed1) (n2, ed2)
+    | length n1 /= length n2   = ([], False)
+    | length ed1 /= length ed2 = ([], False)
+    | otherwise = 
+        let degreexs1 = quickSortAsc $ findDegree (n1, ed1)
+            degreexs2 = quickSortAsc $ findDegree (n2, ed2)
+        in if degreexs1 /= degreexs2
+           then ([], False)
+           else
+               let outxs = findGraphPermutation (n1, ed1) (n2, ed2) degreexs1 degreexs2 ed1 ed2
+               in (outxs, (length outxs) /= 0)
 
+findGraphPermutation :: (Eq a) => ([a], [(a, a)]) -> 
+                        ([a], [(a, a)]) -> [Int] -> [Int] -> [(a, a)] -> [(a, a)] -> [(a, a)]
+findGraphPermutation (n1, ed1) (n2, ed2) ids1 ids2 cmped1 cmped2 = 
+    let xs = groupByDegree ids1 n1 ids2 n2 (unique ids1)
+    in subFindGraphPermutation xs cmped1 cmped2
 
+groupByDegree :: (Eq a) => [Int] -> [a] -> [Int] -> [a] -> [Int] -> [([a], [a])]
+groupByDegree _ _ _ _ [] = []
+groupByDegree ids1 n1 ids2 n2 (cmp:nxs) = 
+    let g1 = map (\(_, curnode) -> curnode) (filter (\(val, _) -> val == cmp) (zip ids1 n1))
+        g2 = map (\(_, curnode) -> curnode) (filter (\(val, _) -> val == cmp) (zip ids2 n2))
+    in [(g1, g2)] ++ groupByDegree ids1 n1 ids2 n2 nxs
 
+subFindGraphPermutation :: (Eq a) => [([a], [a])] -> [(a, a)] -> [(a, a)] -> [(a, a)]
+subFindGraphPermutation [] _ _ = []
+subFindGraphPermutation ((n1, n2):xs) cmped1 cmped2 =
+    let permu = breakAt (map (\[x, y] -> (x, y)) (sequence [n1, n2]))
+        permu2 = genBijections permu
+        outxs = case (filter (\vala -> testMapping vala cmped1 cmped2) permu2) of 
+                  (x:_) -> x
+                  [] -> []
+    in outxs ++ subFindGraphPermutation xs cmped1 cmped2
+
+findDegree :: (Eq a) => ([a], [(a, a)]) -> [Int]
+findDegree ([], _) = []
+findDegree ((x:xs), nodexs) = [length $ filter (\(x1, y1) -> x1 == x || y1 == x) nodexs] ++ findDegree (xs, nodexs)
+
+testMapping :: (Eq a) => [(a,a)] -> [(a,a)] -> [(a,a)] -> Bool
+testMapping mapping ed1 ed2 =
+  all (\e -> applyMapping mapping e `elem` ed2) ed1
+
+applyMapping :: (Eq a) => [(a,a)] -> (a,a) -> (a,a)
+applyMapping f (u,v) = (lookup2 u f, lookup2 v f)
+  where
+    lookup2 x mapping = case lookup x mapping of
+                          Just y -> y
+                          Nothing -> x
+
+genBijections :: Eq b => [[(a,b)]] -> [[(a,b)]]
+genBijections [] = [[]]
+genBijections (grp:grps) = 
+    concat (map (\(src, tgt) -> let filteredgrps = map (filter (\(_, y) -> y /= tgt)) grps
+                                in map ((src, tgt):) (genBijections filteredgrps)) 
+                grp)
 
 
 
