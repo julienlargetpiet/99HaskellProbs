@@ -1,5 +1,5 @@
 import qualified System.Random as R
-import Data.List (permutations)
+import Data.List (find)
 
 -- helpers
 
@@ -1565,9 +1565,9 @@ myCycle x xs =
     let outxs = subCycle x x xs [] False 0 (length xs)
     in if null outxs
        then []
-       else head outxs
+       else outxs
 
-subCycle :: (Eq a) => a -> a -> [(a, a)] -> [a] -> Bool -> Int -> Int -> [[a]]
+subCycle :: (Eq a) => a -> a -> [(a, a)] -> [a] -> Bool -> Int -> Int -> [a]
 subCycle _ _ [] _ _ _ _ = []
 subCycle x cmp xs outxs alrd n cmp2
     | x /= cmp  = 
@@ -1576,7 +1576,7 @@ subCycle x cmp xs outxs alrd n cmp2
            then concat $ map (\(_, n2) -> subCycle n2 cmp xs (outxs ++ [x]) True (n + 1) cmp2) newxs
            else []
     | otherwise = if alrd
-                  then [outxs ++ [cmp]]
+                  then outxs ++ [cmp]
                   else let newxs = filter (\(val1, _) -> val1 == x) xs
                        in if not . null $ newxs
                           then concat $ map (\(_, n2) -> subCycle n2 cmp xs (outxs ++ [x]) True (n + 1) cmp2) newxs
@@ -1749,6 +1749,7 @@ ng1 = [1,2,3,4,5,6,7,8] :: [Int]
 ng2 = [1,2,3,4,5,6,7,8] :: [Int]
 dgs = [2,3,3,2,3,2,3,3] :: [Int]
 dgs2 = [3,3,2,3,2,2,3,3] :: [Int]
+dgs3 = [3,3,3,3,3,3,3,3] :: [Int]
 
 iso :: (Eq a) => ([a], [(a, a)]) -> ([a], [(a, a)]) -> ([(a, a)], Bool)
 iso (n1, ed1) (n2, ed2)
@@ -1781,9 +1782,9 @@ subFindGraphPermutation [] _ _ = []
 subFindGraphPermutation ((n1, n2):xs) cmped1 cmped2 =
     let permu = breakAt (map (\[x, y] -> (x, y)) (sequence [n1, n2]))
         permu2 = genBijections permu
-        outxs = case (filter (\vala -> testMapping vala cmped1 cmped2) permu2) of 
-                  (x:_) -> x
-                  [] -> []
+        outxs = case (find (\vala -> testMapping vala cmped1 cmped2) permu2) of 
+                  Just x -> x
+                  Nothing -> []
     in outxs ++ subFindGraphPermutation xs cmped1 cmped2
 
 findDegree :: (Eq a) => ([a], [(a, a)]) -> [Int]
