@@ -1333,9 +1333,9 @@ subLayout2 (MyNode x l r) maxdepth depth lastright fromright alrd =
         topval   = (2 ^ (maxdepth - newdepth) `div` 2)
         val = if not fromright
               then if not alrd
-                   then lastright + (spaceCalc l (maxdepth - newdepth) 1) + topval
+                   then (spaceCalc l (maxdepth - newdepth) 1) + topval
                    else lastright + (spaceCalc l (maxdepth - newdepth) 1)
-              else lastright + (2 ^ (maxdepth - newdepth + 1) `div` 2)
+              else lastright + (2 ^ (maxdepth - newdepth))
         newlastright = if not fromright
                        then lastright
                        else val - topval
@@ -1810,10 +1810,55 @@ genBijections (grp:grps) =
                 grp)
 
 
+-- 86
+
+kgraph = (['a','b','c','d','e','f','g','h','i','j'], [('a','b'),('a','e'),('a','f'),('b','c'),('b','g'),('c','d'),('c','h'),('d','e'),('d','i'),('e','j'),('f','h'),('f','i'),('g','i'),('g','j'),('h','j')])
+
+-- a
+
+degree :: (Eq a) => [(a, a)] -> a -> Int
+degree xs cmp = foldl (\acc (x, y) -> if x == cmp || y == cmp then acc + 1 else acc) 0 xs
+
+-- b
+
+genSortedNodeDegree :: (Eq a) => ([a], [(a, a)]) -> [a]
+genSortedNodeDegree (nxs, edgexs) = 
+    let predeg = subGenSortedNodeDegree (nxs, edgexs)
+    in  countDegAsc (zip nxs predeg) (quickSortDesc . unique $ predeg)
+
+subGenSortedNodeDegree :: (Eq a) => ([a], [(a, a)]) -> [Int]
+subGenSortedNodeDegree ([], _) = []
+subGenSortedNodeDegree ((cmp:xs), edgexs) = [degree edgexs cmp] ++ subGenSortedNodeDegree (xs, edgexs)
+
+countDegAsc :: [(a, Int)] -> [Int] -> [a]
+countDegAsc xs [] = []
+countDegAsc xs (cmp:unics) = (map (\(x2, _) -> x2) (filter (\(_, x) -> x == cmp) xs)) ++ countDegAsc xs unics
 
 
+--c
+-- coloring the more conneted nodes, lead to a sort of "compartimentalization" that allow to reuse same colors for each created compartiment later, it is why we decreasingly sort nodes according to their number of connection first
 
+kcolor :: (Eq a) => ([a], [(a, a)]) -> [(a, Int)]
+kcolor (nxs, edgexs) = 
+    let outxs = genSortedNodeDegree (nxs, edgexs)
+    in subKcolor edgexs 1 (zip outxs (replicate (length outxs) 0))
 
+subKcolor :: (Eq a) => [(a, a)] -> Int -> [(a, Int)] -> [(a, Int)]
+subKcolor _ _ [] = []
+subKcolor _ n [(curnode, _)] = [(curnode, n)]
+subKcolor edgexs n ((curnode, _):outxs) = 
+    let newoutxs = subKcolor2 n outxs edgexs [curnode]
+    in  [(curnode, n)]
+        ++ (filter (\(_, val) -> val /= 0) newoutxs) 
+        ++ subKcolor edgexs (n + 1) (filter (\(_, nb) -> nb == 0) newoutxs)
+
+subKcolor2 :: (Eq a) => Int -> [(a, Int)] -> [(a, a)] -> [a] -> [(a, Int)]
+subKcolor2 _ [] _ _ = []
+subKcolor2 n ((cmp, _):xs) edgexs alrd = 
+    let (newn, newalrd) = if null (filter (\(v1, v2) -> v1 == cmp && v2 `elem` alrd || v1 `elem` alrd && v2 == cmp) edgexs)
+               then (n, (cmp:alrd))
+               else (0, alrd)
+    in [(cmp, newn)] ++ subKcolor2 n xs edgexs newalrd
 
 
 
