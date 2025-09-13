@@ -1860,9 +1860,29 @@ subKcolor2 n ((cmp, _):xs) edgexs alrd =
                else (0, alrd)
     in [(cmp, newn)] ++ subKcolor2 n xs edgexs newalrd
 
+-- 87
 
+graph87a = ([1,2,3,4,5,6,7], [(1,2),(2,4),(2,3), (1, 11), (11, 33)])
 
+graph87b = ([1,2,3,4,5,6,7], [(1,2),(2,3),(1,4),(3,4),(5,2),(5,4),(6,7),(1,11),(1,5),(5,77)])
 
+depthFirst :: (Eq a) => ([a], [(a, a)]) -> a -> [a]
+depthFirst (_, xs) cmp = 
+    let newxs = xs ++ (map (\(x, y) -> (y, x)) xs)
+    in subDepthFirst (zip newxs (replicate (length newxs) False)) cmp [] [cmp] cmp
+
+subDepthFirst :: (Eq a) => [((a, a), Bool)] -> a -> [a] -> [a] -> a -> [a]
+subDepthFirst xs cmp trackxs outxs cmpbase = 
+    let (newxs, newtrackxs, newcmp, isend, newoutxs) = case find (\((v1, v2), alrd) -> v1 == cmp && not alrd) xs of
+                          Just ((src, tgt), _) -> (map (\((v1, v2), alrd) -> if v1 == cmp && v2 == tgt && not alrd || v2 == cmp && not alrd
+                                                           then ((v1, v2), True)
+                                                           else ((v1, v2), alrd)) xs, (trackxs ++ [cmp]), tgt, False, (outxs ++ [tgt]))
+                          Nothing -> (map (\((v1, v2), alrd) -> if v2 == cmp && not alrd
+                                                           then ((v1, v2), True)
+                                                           else ((v1, v2), alrd)) xs, init trackxs, last trackxs, True, outxs) 
+    in if null trackxs && isend
+       then newoutxs
+       else subDepthFirst newxs newcmp newtrackxs newoutxs cmpbase
 
 
 
