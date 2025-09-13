@@ -1884,6 +1884,52 @@ subDepthFirst xs cmp trackxs outxs cmpbase =
        then newoutxs
        else subDepthFirst newxs newcmp newtrackxs newoutxs cmpbase
 
+-- 88
+
+graph88 = ([1,2,3,4,5,6,7], [(1,2),(2,3),(1,4),(3,4),(5,2),(5,4),(6,7)])
+graph88b = ([1,2,3,4,5,6,7], [(1,2),(1,3),(1,4),(6,7)])
+
+connectedComponents :: (Eq a) => ([a], [(a, a)]) -> [[a]]
+connectedComponents (nodexs, edgexs) = 
+    let newedgexs = edgexs ++ map (\(x, y) -> (y, x)) edgexs 
+    in subConnectedComponents (zip nodexs (replicate (length nodexs) False)) (zip newedgexs (replicate (length newedgexs) False))
+
+subConnectedComponents :: (Eq a) => [(a, Bool)] -> [((a, a), Bool)] -> [[a]]
+subConnectedComponents nodexs edgexs = case find (\(_, alrd) -> not alrd) nodexs of
+                                           Just (x, _) -> 
+                                               let (outxs, newedgexs) = subConnectedComponents2 [x] edgexs [x]
+                                                   newnodexs = map (\(val, alrd) -> if val `elem` outxs
+                                                                                 then (val, True)
+                                                                                 else (val, alrd)) nodexs
+                                               in outxs:(subConnectedComponents newnodexs newedgexs)
+                                           Nothing -> []
+
+subConnectedComponents2 :: (Eq a) => [a] -> [((a, a), Bool)] -> [a] -> ([a], [((a, a), Bool)])
+subConnectedComponents2 outxs edgexs trackxs = case find (\((v1, v2), alrd) -> not alrd && v1 == head trackxs) edgexs of
+                                            Just ((v1, v2), _) -> 
+                                                let newedgexs = map (\((x1, x2), alrd) -> if x1 == v1 && x2 == v2 || x1 == v2 && x2 == v1
+                                                                                then ((x1, x2), True)
+                                                                                else ((x1, x2), alrd)) edgexs
+                                                    newoutxs = if v2 `elem` outxs
+                                                               then outxs
+                                                               else (v2:outxs)
+                                                in subConnectedComponents2 newoutxs newedgexs (v2:trackxs)
+                                            Nothing -> if length trackxs == 1
+                                                       then (outxs, edgexs)
+                                                       else subConnectedComponents2 outxs edgexs (tail trackxs)
+                                          
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
