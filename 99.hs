@@ -1918,7 +1918,58 @@ subConnectedComponents2 outxs edgexs trackxs = case find (\((v1, v2), alrd) -> n
                                                        then (outxs, edgexs)
                                                        else subConnectedComponents2 outxs edgexs (tail trackxs)
                                           
+-- 89
 
+graph89a = ([1,2,3,4,5],[(1,2),(2,3),(1,4),(3,4),(5,2),(5,4)])
+
+graph89b = ([1,2,3,4,5],[(1,2),(2,3),(1,4),(3,4),(5,2),(5,4),(1,3)])
+
+bipartite :: (Eq a) => ([a], [(a, a)]) -> Bool
+bipartite (nodexs, edgexs) = 
+    let newnodexs = connectedComponents (nodexs, edgexs)
+        graphxs   = constructGraph newnodexs edgexs
+    in  subBipartite graphxs
+
+constructGraph :: (Eq a) => [[a]] -> [(a, a)] -> [([a], [(a, a)])]
+constructGraph [] _ = []
+constructGraph (xs:xss) edgexs = (xs, filter (\(x, y) -> x `elem` xs || y `elem` xs) edgexs):constructGraph xss edgexs
+
+subBipartite :: (Eq a) => [([a], [(a, a)])] -> Bool
+subBipartite [] = True
+subBipartite ((nodexs, edgexs):graphxs) = 
+    let outval = if null edgexs
+                 then True
+                 else subBipartite2 (zip nodexs (replicate (length nodexs) False)) [] [] edgexs
+    in if outval
+       then subBipartite graphxs
+       else False
+
+subBipartite2 :: (Eq a) => [(a, Bool)] -> [a] -> [a] -> [(a, a)] -> Bool
+subBipartite2 nodexs grp1 grp2 edgexs = case find (\(_, alrd) -> not alrd) nodexs of
+                                Just (nodeval, _) -> let outxs = filter (\(val1, val2) -> val1 == nodeval 
+                                                                        || val2 == nodeval) edgexs
+                                                         outxs2 = map (\(val1, val2) -> if val1 == nodeval
+                                                                                        then val2
+                                                                                        else val1) outxs
+                                                         (isvalid, newgrp1, newgrp2) = if null grp1 && null grp2
+                                                            then (True
+                                                                  , (nodeval:grp1)
+                                                                  , (grp2 ++ outxs2))
+                                                            else if head outxs2 `elem` grp1
+                                                                 then (all (\x -> x `elem` grp1) outxs2
+                                                                      , (grp1 ++ outxs2)
+                                                                      , (nodeval:grp2))
+                                                                 else (all (\x -> x `elem` grp2) outxs2
+                                                                      , (nodeval:grp1)
+                                                                      , (grp2 ++ outxs2))
+                                                         spelist = (nodeval:outxs2)
+                                                         newnodexs = map (\(x2, alrd2) -> if x2 `elem` spelist
+                                                                                          then (x2, True)
+                                                                                          else (x2, alrd2)) nodexs
+                                                     in if isvalid
+                                                        then subBipartite2 newnodexs newgrp1 newgrp2 edgexs
+                                                        else False
+                                Nothing -> True
 
 
 
