@@ -3,6 +3,31 @@ import Data.List (find)
 
 -- helpers
 
+permu :: [a] -> [[a]]
+permu xs = subPermu [xs] 0 (length xs - 1)
+
+subPermu :: [[a]] -> Int -> Int -> [[a]]
+subPermu xs n cmp
+    | n < cmp = subPermu (concat $ map (\x -> permutationAt x n) xs) (n + 1) cmp
+    | otherwise = xs
+
+permutationAt :: [a] -> Int -> [[a]]
+permutationAt xs n = subPermutationAt xs n n
+
+subPermutationAt :: [a] -> Int -> Int -> [[a]]
+subPermutationAt xs n nb
+    | n < l = (subPermu3 xs n nb (xs !! nb) (xs !! n) 0):subPermutationAt xs (n + 1) nb
+    | otherwise = []
+    where l = length xs
+
+subPermu3 :: [a] -> Int -> Int -> a -> a -> Int -> [a]
+subPermu3 [] _ _ _ _ _ = []
+subPermu3 (x:xs) n nb val val2 n2
+    | n2 == nb   = val2:subPermu3 xs n nb val val2 (n2 + 1)
+    | n2 /= n   = x:subPermu3 xs n nb val val2 (n2 + 1)
+    | otherwise = val:subPermu3 xs n nb val val2 (n2 + 1)
+
+
 breakAt :: (Eq a) => [(a, a)] -> [[(a, a)]]
 breakAt xs = 
     let uniquevals = unique $ map (\(val, _) -> val) xs
@@ -1972,11 +1997,7 @@ subBipartite2 nodexs grp1 grp2 edgexs = case find (\(_, alrd) -> not alrd) nodex
                                 Nothing -> True
 
 
-
-
-
-
-
+-- 90
 
 
 
