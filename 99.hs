@@ -1999,6 +1999,92 @@ subBipartite2 nodexs grp1 grp2 edgexs = case find (\(_, alrd) -> not alrd) nodex
 
 -- 90
 
+queens :: [[(Int, Int)]]
+queens = 
+    let outxs = map (\[c, r] -> (c, r)) (sequence [[1..8], [1..8]])
+    in subQueens (zip outxs (replicate 64 False)) []
+
+--subQueens :: [((Int, Int), Bool)] -> [(Int, Int)] -> [[(Int, Int)]]
+--subQueens xs outval = 
+--    let outxs = filter (\(_, alrd) -> not alrd) xs
+--    in if null outxs
+--       then if length outval /= 8
+--            then []
+--            else [outval]
+--       else concat $ map (\((c, r), _) -> let newxs = updateChess c r xs
+--                                 in subQueens newxs ((c, r):outval)) outxs
+
+subQueens :: [((Int, Int), Bool)] -> [(Int, Int)] -> [[(Int, Int)]]
+subQueens xs outval =
+    let col = length outval + 1
+        outxs = filter (\((c,_), alrd) -> c == col && not alrd) xs
+    in if col > 8
+       then [outval]
+       else concat [ subQueens (updateChess c r xs) ((c,r):outval)
+                   | ((c,r),_) <- outxs ]
+
+updateChess :: Int -> Int -> [((Int, Int), Bool)] 
+                -> [((Int, Int), Bool)]
+updateChess c r xs =
+    let newxs1 = map (\((v1, v2), alrd) -> if v1 == c || v2 == r
+                                       then ((v1, v2), True)
+                                       else ((v1, v2), alrd)) xs
+        newxs2 = upperLeft newxs1 (c - 1) (r - 1)
+        newxs3 = upperRight newxs2 (c + 1) (r - 1)
+        newxs4 = lowerLeft newxs3 (c - 1) (r + 1)
+        newxs5 = lowerRight newxs4 (c + 1) (r + 1)
+    in newxs5
+
+upperLeft :: [((Int, Int), Bool)] -> Int -> Int -> [((Int, Int), Bool)]
+upperLeft xs 0 _ = xs
+upperLeft xs _ 0 = xs
+upperLeft xs c r = 
+    let newxs = map (\((x, y), alrd) -> if x == c && y == r
+                                           then ((x, y), True)
+                                           else ((x, y), alrd)) xs
+    in upperLeft newxs (c - 1) (r - 1)
+
+upperRight :: [((Int, Int), Bool)] -> Int -> Int -> [((Int, Int), Bool)]
+upperRight xs 9 _ = xs
+upperRight xs _ 0 = xs
+upperRight xs c r = 
+    let newxs = map (\((x, y), alrd) -> if x == c && y == r
+                                           then ((x, y), True)
+                                           else ((x, y), alrd)) xs
+    in upperRight newxs (c + 1) (r - 1)
+
+lowerLeft :: [((Int, Int), Bool)] -> Int -> Int -> [((Int, Int), Bool)]
+lowerLeft xs 0 _ = xs
+lowerLeft xs _ 9 = xs
+lowerLeft xs c r = 
+    let newxs = map (\((x, y), alrd) -> if x == c && y == r
+                                           then ((x, y), True)
+                                           else ((x, y), alrd)) xs
+    in lowerLeft newxs (c - 1) (r + 1)
+
+lowerRight :: [((Int, Int), Bool)] -> Int -> Int -> [((Int, Int), Bool)]
+lowerRight xs 9 _ = xs
+lowerRight xs _ 9 = xs
+lowerRight xs c r = 
+    let newxs = map (\((x, y), alrd) -> if x == c && y == r
+                                           then ((x, y), True)
+                                           else ((x, y), alrd)) xs
+    in lowerRight newxs (c + 1) (r + 1)
+
+testfunc :: Int -> [Int] -> [[Int]] -- yeaaaaaah map  acts like a concatenation
+testfunc 0 xs = if head xs == 10 
+                then []
+                else [xs]
+testfunc n xs = concat $ map (\x -> testfunc (n - 1) (x:xs)) [1..12]
+
+
+
+
+
+
+
+
+
 
 
 
