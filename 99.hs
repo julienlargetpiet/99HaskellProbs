@@ -2017,7 +2017,8 @@ queens =
 subQueens :: [((Int, Int), Bool)] -> [(Int, Int)] -> [[(Int, Int)]]
 subQueens xs outval =
     let col = length outval + 1
-        outxs = filter (\((c,_), alrd) -> c == col && not alrd) xs
+        rows = map (\(_, r) -> r) outval
+        outxs = filter (\((c, r), alrd) -> c == col && not alrd && not (r `elem` rows)) xs
     in if col > 8
        then [outval]
        else concat [ subQueens (updateChess c r xs) ((c,r):outval)
