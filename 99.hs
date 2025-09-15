@@ -1947,7 +1947,9 @@ subConnectedComponents2 outxs edgexs trackxs = case find (\((v1, v2), alrd) -> n
 
 graph89a = ([1,2,3,4,5],[(1,2),(2,3),(1,4),(3,4),(5,2),(5,4)])
 
-graph89b = ([1,2,3,4,5],[(1,2),(2,3),(1,4),(3,4),(5,2),(5,4),(1,3)])
+graph89b = ([1,2,3,4,5],[(1,2),(2,3),(1,3),(1,4),(3,4),(5,2),(5,4)])
+
+graph89c = ([5,4,3,2,1],[(1,2),(2,3),(3,4),(5,4)])
 
 bipartite :: (Eq a) => ([a], [(a, a)]) -> Bool
 bipartite (nodexs, edgexs) = 
@@ -1976,19 +1978,17 @@ subBipartite2 nodexs grp1 grp2 edgexs = case find (\(_, alrd) -> not alrd) nodex
                                                          outxs2 = map (\(val1, val2) -> if val1 == nodeval
                                                                                         then val2
                                                                                         else val1) outxs
-                                                         (isvalid, newgrp1, newgrp2) = if null grp1 && null grp2
-                                                            then (True
-                                                                  , (nodeval:grp1)
-                                                                  , (grp2 ++ outxs2))
-                                                            else if head outxs2 `elem` grp1
-                                                                 then (all (\x -> x `elem` grp1) outxs2
+                                                         outxs2b = filter (\x -> x `elem` grp1 || x `elem` grp2) outxs2
+                                                         (isvalid, newgrp1, newgrp2) = if null outxs2b && not (nodeval `elem` (grp1 ++ grp2))
+                                                                 then (True, nodeval:grp1, grp2 ++ outxs2)
+                                                                 else if (head outxs2b) `elem` grp1
+                                                                      then ((all (\x -> not $ x `elem` grp2) outxs2b) && (not $ nodeval `elem` grp1)
                                                                       , (grp1 ++ outxs2)
                                                                       , (nodeval:grp2))
-                                                                 else (all (\x -> x `elem` grp2) outxs2
+                                                                      else ((all (\x -> not $ x `elem` grp1) outxs2b) && (not $ nodeval `elem` grp2)
                                                                       , (nodeval:grp1)
                                                                       , (grp2 ++ outxs2))
-                                                         spelist = (nodeval:outxs2)
-                                                         newnodexs = map (\(x2, alrd2) -> if x2 `elem` spelist
+                                                         newnodexs = map (\(x2, alrd2) -> if x2 == nodeval
                                                                                           then (x2, True)
                                                                                           else (x2, alrd2)) nodexs
                                                      in if isvalid
