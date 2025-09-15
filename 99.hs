@@ -1999,29 +1999,18 @@ subBipartite2 nodexs grp1 grp2 edgexs = case find (\(_, alrd) -> not alrd) nodex
 
 -- 90
 
-queens :: [[(Int, Int)]]
+queens :: [[Int]]
 queens = 
     let outxs = map (\[c, r] -> (c, r)) (sequence [[1..8], [1..8]])
     in subQueens (zip outxs (replicate 64 False)) []
 
---subQueens :: [((Int, Int), Bool)] -> [(Int, Int)] -> [[(Int, Int)]]
---subQueens xs outval = 
---    let outxs = filter (\(_, alrd) -> not alrd) xs
---    in if null outxs
---       then if length outval /= 8
---            then []
---            else [outval]
---       else concat $ map (\((c, r), _) -> let newxs = updateChess c r xs
---                                 in subQueens newxs ((c, r):outval)) outxs
-
-subQueens :: [((Int, Int), Bool)] -> [(Int, Int)] -> [[(Int, Int)]]
+subQueens :: [((Int, Int), Bool)] -> [Int] -> [[Int]]
 subQueens xs outval =
     let col = length outval + 1
-        rows = map (\(_, r) -> r) outval
-        outxs = filter (\((c, r), alrd) -> c == col && not alrd && not (r `elem` rows)) xs
+        outxs = filter (\((c, r), alrd) -> c == col && not alrd && not (r `elem` outval)) xs
     in if col > 8
        then [outval]
-       else concat [ subQueens (updateChess c r xs) ((c,r):outval)
+       else concat [ subQueens (updateChess c r xs) (outval ++ [r])
                    | ((c,r),_) <- outxs ]
 
 updateChess :: Int -> Int -> [((Int, Int), Bool)] 
