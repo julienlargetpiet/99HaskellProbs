@@ -1966,35 +1966,32 @@ subBipartite [] = True
 subBipartite ((nodexs, edgexs):graphxs) = 
     let outval = if null edgexs
                  then True
-                 else subBipartite2 (zip nodexs (replicate (length nodexs) False)) [] [] edgexs
+                 else subBipartite2 nodexs [] [] edgexs
     in if outval
        then subBipartite graphxs
        else False
 
-subBipartite2 :: (Eq a) => [(a, Bool)] -> [a] -> [a] -> [(a, a)] -> Bool
-subBipartite2 nodexs grp1 grp2 edgexs = case find (\(_, alrd) -> not alrd) nodexs of
-                                Just (nodeval, _) -> let outxs = filter (\(val1, val2) -> val1 == nodeval 
-                                                                        || val2 == nodeval) edgexs
-                                                         outxs2 = map (\(val1, val2) -> if val1 == nodeval
-                                                                                        then val2
-                                                                                        else val1) outxs
-                                                         outxs2b = filter (\x -> x `elem` grp1 || x `elem` grp2) outxs2
-                                                         (isvalid, newgrp1, newgrp2) = if null outxs2b && not (nodeval `elem` (grp1 ++ grp2))
-                                                                 then (True, nodeval:grp1, grp2 ++ outxs2)
-                                                                 else if (head outxs2b) `elem` grp1
-                                                                      then ((all (\x -> not $ x `elem` grp2) outxs2b) && (not $ nodeval `elem` grp1)
-                                                                      , (grp1 ++ outxs2)
-                                                                      , (nodeval:grp2))
-                                                                      else ((all (\x -> not $ x `elem` grp1) outxs2b) && (not $ nodeval `elem` grp2)
-                                                                      , (nodeval:grp1)
-                                                                      , (grp2 ++ outxs2))
-                                                         newnodexs = map (\(x2, alrd2) -> if x2 == nodeval
-                                                                                          then (x2, True)
-                                                                                          else (x2, alrd2)) nodexs
-                                                     in if isvalid
-                                                        then subBipartite2 newnodexs newgrp1 newgrp2 edgexs
-                                                        else False
-                                Nothing -> True
+subBipartite2 :: (Eq a) => [a] -> [a] -> [a] -> [(a, a)] -> Bool
+subBipartite2 [] _ _ _ = True
+subBipartite2 (nodeval:nodexs) grp1 grp2 edgexs = 
+    let outxs = filter (\(val1, val2) -> val1 == nodeval 
+                        || val2 == nodeval) edgexs
+        outxs2 = map (\(val1, val2) -> if val1 == nodeval
+                                       then val2
+                                       else val1) outxs
+        outxs2b = filter (\x -> x `elem` grp1 || x `elem` grp2) outxs2
+        (isvalid, newgrp1, newgrp2) = if null outxs2b && not (nodeval `elem` (grp1 ++ grp2))
+                                      then (True, nodeval:grp1, grp2 ++ outxs2)
+                                      else if (head outxs2b) `elem` grp1
+                                      then ((all (\x -> not $ x `elem` grp2) outxs2b) && (not $ nodeval `elem` grp1)
+                                      , (grp1 ++ outxs2)
+                                      , (nodeval:grp2))
+                                      else ((all (\x -> not $ x `elem` grp1) outxs2b) && (not $ nodeval `elem` grp2)
+                                      , (nodeval:grp1)
+                                      , (grp2 ++ outxs2))
+    in if isvalid
+       then subBipartite2 nodexs newgrp1 newgrp2 edgexs
+       else False
 
 
 -- 90
@@ -2061,12 +2058,115 @@ lowerRight xs c r =
                                            else ((x, y), alrd)) xs
     in lowerRight newxs (c + 1) (r + 1)
 
-testfunc :: Int -> [Int] -> [[Int]] -- yeaaaaaah map  acts like a concatenation
-testfunc 0 xs = if head xs == 10 
-                then []
-                else [xs]
-testfunc n xs = concat $ map (\x -> testfunc (n - 1) (x:xs)) [1..12]
+--testfunc :: Int -> [Int] -> [[Int]] -- yeaaaaaah map  acts like a concatenation
+--testfunc 0 xs = if head xs == 10 
+--                then []
+--                else [xs]
+--testfunc n xs = concat $ map (\x -> testfunc (n - 1) (x:xs)) [1..12]
 
+-- 91
+
+knightsTo :: (Int, Int) -> [(Int, Int)]
+knightsTo (c, r) =
+    let chessboard = zip (map (\[x, y] -> (x, y)) (sequence [[1..8], [1..8]])) (replicate 64 False)
+        newchessboard = map (\((x1, x2), alrd) -> if x1 == c && x2 == r
+                                        then ((x1, x2), True)
+                                        else ((x1, x2), alrd)) chessboard
+    in map (\(x, _) -> x) (subKnightsTo newchessboard [((c, r), 1)])
+
+subKnightsTo :: [((Int, Int), Bool)] -> [((Int, Int), Int)] 
+                -> [((Int, Int), Int)]
+subKnightsTo _ [] = []
+subKnightsTo chessboard (((c, r), nbmoove):posxs)
+    | all (\(_, alrd) -> alrd) chessboard = posxs
+    | otherwise = 
+        let (newc, newr, isin) = forwardPos c r nbmoove
+            blval = any (\((c1, r1), alrd) -> 
+                c1 == newc && r1 == newr && alrd) chessboard
+        in if blval || not isin
+           then if nbmoove < 8
+                then subKnightsTo chessboard (((c, r), nbmoove + 1):posxs)
+                else 
+                    let (newchessboard, newposxs) = trackBackPos chessboard (((c, r), nbmoove):posxs)
+                    in subKnightsTo newchessboard newposxs
+           else 
+                let newposxs = ((newc, newr), 1):((c, r), nbmoove):posxs
+                    newchessboard = map (\((x1, x2), alrd) -> if x1 == newc && x2 == newr
+                                                      then ((x1, x2), True)
+                                                      else ((x1, x2), alrd)) chessboard
+                in subKnightsTo newchessboard newposxs
+
+trackBackPos :: [((Int, Int), Bool)] -> [((Int, Int), Int)] 
+                -> ([((Int, Int), Bool)], [((Int, Int), Int)])
+trackBackPos chessboard (((c, r), nbmoove):posxs)
+    | nbmoove == 8 = 
+        let newchessboard = map (\((x1, x2), alrd) -> if x1 == c && x2 == r
+                                                      then ((x1, x2), False)
+                                                      else ((x1, x2), alrd)) chessboard
+        in trackBackPos newchessboard posxs
+    | otherwise = (chessboard, ((c, r), nbmoove + 1):posxs)
+
+forwardPos :: Int -> Int -> Int -> (Int, Int, Bool)
+forwardPos c r nbmoove = if nbmoove == 1
+                         then mooveLeftUp c r 
+                         else if nbmoove == 2
+                         then mooveLeftDown c r
+                         else if nbmoove == 3
+                         then mooveUpLeft c r
+                         else if nbmoove == 4
+                         then mooveUpRight c r
+                         else if nbmoove == 5
+                         then mooveRightUp c r
+                         else if nbmoove == 6
+                         then mooveRightDown c r
+                         else if nbmoove == 7
+                         then mooveDownLeft c r
+                         else if nbmoove == 8
+                         then mooveDownRight c r
+                         else (0, 0, False)
+
+mooveLeftUp :: Int -> Int -> (Int, Int, Bool)
+mooveLeftUp c r = if c - 2 < 1 || r - 1 < 1
+                  then (0, 0, False)
+                  else (c - 2, r - 1, True)
+                  
+mooveLeftDown :: Int -> Int -> (Int, Int, Bool)
+mooveLeftDown c r = if c - 2 < 1 || r + 1 > 8
+                    then (0, 0, False)
+                    else (c - 2, r + 1, True)
+
+mooveUpLeft :: Int -> Int -> (Int, Int, Bool)
+mooveUpLeft c r = if c - 1 < 1 || r - 2 < 1
+                  then (0, 0, False)
+                  else (c - 1, r - 2, True)
+
+mooveUpRight :: Int -> Int -> (Int, Int, Bool)
+mooveUpRight c r = if c + 1 > 8 || r - 2 < 1
+                   then (0, 0, False)
+                   else (c + 1, r - 2, True)
+
+mooveRightUp :: Int -> Int -> (Int, Int, Bool)
+mooveRightUp c r = if c + 2 > 8 || r - 1 < 1
+                   then (0, 0, False)
+                   else (c + 2, r - 1, True)
+
+mooveRightDown :: Int -> Int -> (Int, Int, Bool)
+mooveRightDown c r = if c + 2 > 8 || r + 1 > 8
+                     then (0, 0, False)
+                     else (c + 2, r + 1, True)
+
+mooveDownLeft :: Int -> Int -> (Int, Int, Bool)
+mooveDownLeft c r = if c - 1 < 1 || r + 2 > 8
+                    then (0, 0, False)
+                    else (c - 1, r + 2, True)
+
+mooveDownRight :: Int -> Int -> (Int, Int, Bool)
+mooveDownRight c r = if c + 1 > 8 || r + 2 > 8
+                    then (0, 0, False)
+                    else (c + 1, r + 2, True)
+
+betterKnightsTo :: (Int, Int) -> [(Int, Int)]
+betterKnightsTo 
 
 
 
