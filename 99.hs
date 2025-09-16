@@ -3,6 +3,24 @@ import Data.List (find)
 
 -- helpers
 
+sortAccordinglyAsc :: (Ord a, Eq a) => [a] -> [b] -> [b]
+sortAccordinglyAsc valxs xs = 
+    let newvalxs = quickSortAsc valxs
+        ids = grepIds newvalxs valxs
+        newxs = getRangeList xs ids
+    in newxs
+    where grepIds [] _ = []
+          grepIds (x:xs) xs2 = (grep2 x xs2):grepIds xs xs2
+
+sortAccordinglyDesc :: (Ord a, Eq a) => [a] -> [b] -> [b]
+sortAccordinglyDesc valxs xs = 
+    let newvalxs = quickSortAsc valxs
+        ids = grepIds valxs newvalxs
+        newxs = getRangeList xs ids
+    in newxs
+    where grepIds [] _ = []
+          grepIds (x:xs) xs2 = (grep2 x xs2):grepIds xs xs2
+
 permu :: [a] -> [[a]]
 permu xs = subPermu [xs] 0 (length xs - 1)
 
@@ -2165,11 +2183,45 @@ mooveDownRight c r = if c + 1 > 8 || r + 2 > 8
                     then (0, 0, False)
                     else (c + 1, r + 2, True)
 
-betterKnightsTo :: (Int, Int) -> [(Int, Int)]
-betterKnightsTo 
+--betterKnightsTo :: (Int, Int) -> [(Int, Int)]
+--betterKnightsTo (c, r) = 
+--    let graph = zip (map (\[x, y] -> (x, y)) (sequence [[1..8], [1..8]])) (replicate 64 False)
+--        newgraph = map (\((x, y), alrd) -> if x == c && y == r
+--                                           then ((x, y), True)
+--                                           else ((x, y), alrd)) graph
+--        moovexs = allMooves c r 1
+--    in map (\(x, _) -> x) (subBetterKnightTo newgraph [((c, r), moovexs)])
+--
+--subBetterKnightTo :: [((Int, Int), Bool)] -> [((Int, Int), [(Int, Int)])]
+--                     -> [((Int, Int), Int)]
+--subBetterKnightTo graph (((c, r), nbmoove):posxs) 
+--    | all (\(_, x) -> x) graph = (((c, r), nbmoove):posxs)
+--    | otherwise = 
+--        let 
 
+allMooves2 :: Int -> Int -> Int -> [((Int, Int), Bool)]
+              -> [Int] -> [(Int, Int)] -> [(Int, Int)]
+allMooves2 _ _ 9 _ degxs posxs = 
+    let outxs = sortAccordinglyAsc degxs posxs
+    in outxs
+allMooves2 c r n chessboard degxs posxs = 
+    let (newc, newr, isin) = forwardPos c r n
+        isin2 = if isin
+                then filter (\((x1, x2), alrd) -> x1 == c && x2 == r && alrd) chessboard
+                else []
+    in if null isin2
+       then 
+           let val = allMooves c r 0
+           in allMooves2 c r (n + 1) chessboard (val:degxs) ((c, r):posxs)
+       else allMooves2 c r (n + 1) chessboard degxs posxs
 
-
+allMooves :: Int -> Int -> Int -> Int
+allMooves _ _ 9 = 0
+allMooves c r n = 
+    let (_, _, isvalid) = forwardPos c r n
+    in if isvalid
+       then 1 + allMooves c r (n + 1)
+       else  allMooves c r (n + 1)
 
 
 
