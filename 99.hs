@@ -1,5 +1,8 @@
 import qualified System.Random as R
 import Data.List (find)
+import qualified Data.Array as A
+import Data.List (sortOn)
+
 
 -- helpers
 
@@ -2183,21 +2186,46 @@ mooveDownRight c r = if c + 1 > 8 || r + 2 > 8
                     then (0, 0, False)
                     else (c + 1, r + 2, True)
 
---betterKnightsTo :: (Int, Int) -> [(Int, Int)]
---betterKnightsTo (c, r) = 
---    let graph = zip (map (\[x, y] -> (x, y)) (sequence [[1..8], [1..8]])) (replicate 64 False)
---        newgraph = map (\((x, y), alrd) -> if x == c && y == r
---                                           then ((x, y), True)
---                                           else ((x, y), alrd)) graph
---        moovexs = allMooves c r 1
---    in map (\(x, _) -> x) (subBetterKnightTo newgraph [((c, r), moovexs)])
---
---subBetterKnightTo :: [((Int, Int), Bool)] -> [((Int, Int), [(Int, Int)])]
---                     -> [((Int, Int), Int)]
---subBetterKnightTo graph (((c, r), nbmoove):posxs) 
---    | all (\(_, x) -> x) graph = (((c, r), nbmoove):posxs)
---    | otherwise = 
---        let 
+betterKnightTo :: (Int, Int) -> [(Int, Int)]
+betterKnightTo (c, r) = 
+    let chessboard = zip (map (\[x, y] -> (x, y)) (sequence [[1..8], [1..8]])) (replicate 64 False)
+        newchessboard = map (\((x, y), alrd) -> if x == c && y == r
+                                           then ((x, y), True)
+                                           else ((x, y), alrd)) chessboard
+        moovexs = allMooves2 c r 1 chessboard [] []
+    in map (\(x, _) -> x) (subBetterKnightToDFS newchessboard [((c, r), moovexs)])
+
+subBetterKnightToDFS :: [((Int, Int), Bool)] -> [((Int, Int), [(Int, Int)])]
+                     -> [((Int, Int), [(Int, Int)])]
+subBetterKnightToDFS chessboard (((c, r), []):posxs) = 
+    let newchessboard = map (\((x1, x2), alrd) -> if x1 == c && x2 == r
+                                    then ((x1, x2), False)
+                                    else ((x1, x2), alrd)) chessboard
+    in subBetterKnightToDFS newchessboard posxs
+subBetterKnightToDFS chessboard (((c, r), nextxs):posxs) =
+    let (c2, r2) = head nextxs
+        newchessboard = map (\((x1, x2), alrd) -> if x1 == c2 && x2 == r2
+                                    then ((x1, x2), True)
+                                    else ((x1, x2), alrd)) chessboard
+        newnextxs = tail nextxs
+        moovexs = allMooves2 c2 r2 1 chessboard [] []
+    in if not . null $ moovexs
+       then subBetterKnightToDFS newchessboard (((c2, r2), moovexs):((c, r), newnextxs):posxs)
+       else if all (\(_, x) -> x) chessboard
+       then (((c, r), newnextxs):posxs)
+       else  subBetterKnightToDFS chessboard (((c, r), newnextxs):posxs)
+
+--subBetterKnightToPure :: [((Int, Int), Bool)] -> [((Int, Int), [(Int, Int)])]
+--                     -> [((Int, Int), [(Int, Int)])]
+--subBetterKnightToPure chessboard (((c, r), []):posxs) = posxs
+--subBetterKnightToPure chessboard (((c, r), nextxs):posxs) =
+--    let (c2, r2) = head nextxs
+--        newchessboard = map (\((x1, x2), alrd) ->
+--                                if x1 == c2 && x2 == r2
+--                                then ((x1, x2), True)
+--                                else ((x1, x2), alrd)) chessboard
+--        moovexs = allMooves2 c2 r2 1 chessboard [] []
+--    in subBetterKnightToPure newchessboard (((c2, r2), moovexs):((c, r), tail nextxs):posxs)
 
 allMooves2 :: Int -> Int -> Int -> [((Int, Int), Bool)]
               -> [Int] -> [(Int, Int)] -> [(Int, Int)]
@@ -2207,29 +2235,65 @@ allMooves2 _ _ 9 _ degxs posxs =
 allMooves2 c r n chessboard degxs posxs = 
     let (newc, newr, isin) = forwardPos c r n
         isin2 = if isin
-                then filter (\((x1, x2), alrd) -> x1 == c && x2 == r && alrd) chessboard
+                then filter (\((x1, x2), alrd) -> x1 == newc && x2 == newr && alrd) chessboard
                 else []
     in if null isin2
        then 
-           let val = allMooves c r 0
-           in allMooves2 c r (n + 1) chessboard (val:degxs) ((c, r):posxs)
+           let val = allMooves newc newr 0
+           in allMooves2 c r (n + 1) chessboard (val:degxs) ((newc, newr):posxs)
        else allMooves2 c r (n + 1) chessboard degxs posxs
 
 allMooves :: Int -> Int -> Int -> Int
-allMooves _ _ 9 = 0
-allMooves c r n = 
-    let (_, _, isvalid) = forwardPos c r n
-    in if isvalid
-       then 1 + allMooves c r (n + 1)
-       else  allMooves c r (n + 1)
+allMooves c r n
+    | n > 8     = 0
+    | otherwise =
+        let (_, _, isvalid) = forwardPos c r n
+        in (if isvalid then 1 else 0) + allMooves c r (n + 1)
 
 
+type Pos = (Int, Int)
+type Board = A.Array Pos Bool
 
+-- Initialize 8x8 board with all False
+initBoard :: Board
+initBoard = A.array ((1,1), (8,8)) [((x,y), False) | x <- [1..8], y <- [1..8]]
 
+-- Knight moves
+knightMoves :: Pos -> [Pos]
+knightMoves (c,r) = filter onBoard
+    [ (c+2,r+1), (c+2,r-1), (c-2,r+1), (c-2,r-1)
+    , (c+1,r+2), (c+1,r-2), (c-1,r+2), (c-1,r-2)
+    ]
+  where
+    onBoard (x,y) = x >= 1 && x <= 8 && y >= 1 && y <= 8
 
+-- Warnsdorff heuristic: sort moves by number of onward moves
+sortByDegree :: Board -> [Pos] -> [Pos]
+sortByDegree board = sortOn (\p -> length . filter (not . (board A.!)) $ knightMoves p)
 
+-- DFS for knight's tour
+knightDFS :: Board -> Pos -> [Pos] -> Maybe [Pos]
+knightDFS board pos path
+    | length path == 64 = Just (reverse path)  -- tour complete
+    | otherwise =
+        let board' = board A.// [(pos, True)]
+            moves  = sortByDegree board' $ filter (not . (board' A.!)) (knightMoves pos)
+        in tryMoves board' moves path
+  where
+    tryMoves _ [] _ = Nothing
+    tryMoves b (m:ms) p =
+        case knightDFS b m (m:p) of
+            Just tour -> Just tour
+            Nothing   -> knightDFS b (head ms) p 
 
+-- Entry function
+betterKnightTo2 :: Pos -> Maybe [Pos]
+betterKnightTo2 start = knightDFS initBoard start [start]
 
+testFunc :: Pos -> [(Int, Int)]
+testFunc pxs = case betterKnightTo2 pxs of
+                 Just x -> x
+                 Nothing -> []
 
 
 
