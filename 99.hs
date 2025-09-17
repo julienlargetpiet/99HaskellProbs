@@ -2295,6 +2295,25 @@ testFunc pxs = case betterKnightTo2 pxs of
                  Just x -> x
                  Nothing -> []
 
+-- 93
+
+puzzle :: [Int] -> [[Char]]
+puzzle (x:x2:xs) = 
+    filter (not . null) [puzzleFilter x x2 xs opers (show x2) | opers <- sequence (replicate l "+-*/")]
+    where l = length (xs)
+
+puzzleFilter :: Int -> Int -> [Int] -> [Char] -> [Char] -> [Char]
+puzzleFilter cmp val xs [] outxs = if val == cmp
+                                   then outxs ++ " = " ++ show val
+                                   else []
+puzzleFilter cmp val (x:xs) (op:operxs) outxs 
+    | op == '+' = puzzleFilter cmp (val + x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+    | op == '-' = puzzleFilter cmp (val - x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+    | op == '*' = puzzleFilter cmp (val * x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+    | op == '/' && x /= 0 = puzzleFilter cmp (val `div` x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+    | otherwise = []
+
+
 
 
 
