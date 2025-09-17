@@ -2297,6 +2297,8 @@ testFunc pxs = case betterKnightTo2 pxs of
 
 -- 93
 
+-- operations order is purely from left to right
+
 puzzle :: [Int] -> [[Char]]
 puzzle (x:x2:xs) = 
     filter (not . null) [puzzleFilter x x2 xs opers (show x2) | opers <- sequence (replicate l "+-*/")]
@@ -2331,8 +2333,23 @@ subHowAdd2 cmp n n2 outxs
     | n2 > cmp = subHowAdd2 cmp (n - 1) n2 outxs
     | otherwise = unique . permu $ outxs
 
+-- 93, another approach that includes parenthesis order
 
-
+--puzzle2 :: [Int] -> [[Char]]
+--puzzle2 (x:x2:xs) = 
+--    filter (not . null) [concat (puzzleFilter2 x x2 xs opers (show x2)) | opers <- sequence (replicate l "+-*/")]
+--    where l = length (xs)
+--
+--puzzleFilter2 :: Int -> Int -> [Int] -> [Char] -> [Char] -> [[Char]]
+--puzzleFilter2 cmp val xs [] outxs = if val == cmp
+--                                   then outxs ++ " = " ++ show val
+--                                   else []
+--puzzleFilter2 cmp val (x:xs) (op:operxs) outxs 
+--    | op == '+' = puzzleFilter2 cmp (val + x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+--    | op == '-' = puzzleFilter2 cmp (val - x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+--    | op == '*' = puzzleFilter2 cmp (val * x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+--    | op == '/' && x /= 0 = puzzleFilter2 cmp (val `div` x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+--    | otherwise = []
 
 
 
