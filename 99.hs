@@ -6,6 +6,19 @@ import Data.List (sortOn)
 
 -- helpers
 
+groupIdx :: [Int] -> [a] -> [[a]]
+groupIdx [] _ = []
+groupIdx _ [] = []
+groupIdx (idx:ids) xs = 
+    let (outxs, newxs) = subGroupIdx idx 0 [] xs
+    in outxs:(groupIdx ids newxs)
+
+subGroupIdx :: Int -> Int -> [a] -> [a] -> ([a], [a])
+subGroupIdx cmp n outxs [] = (reverse outxs, [])
+subGroupIdx cmp n outxs (x:xs)
+    | n < cmp   = subGroupIdx cmp (n + 1) (x:outxs) xs
+    | otherwise = (reverse outxs, (x:xs))
+
 sortAccordinglyAsc :: (Ord a, Eq a) => [a] -> [b] -> [b]
 sortAccordinglyAsc valxs xs = 
     let newvalxs = quickSortAsc valxs
@@ -2350,10 +2363,6 @@ subHowAdd2 cmp n n2 outxs
 --    | op == '*' = puzzleFilter2 cmp (val * x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
 --    | op == '/' && x /= 0 = puzzleFilter2 cmp (val `div` x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
 --    | otherwise = []
-
-
-
-
 
 
 
