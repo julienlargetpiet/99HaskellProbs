@@ -2313,6 +2313,31 @@ puzzleFilter cmp val (x:xs) (op:operxs) outxs
     | op == '/' && x /= 0 = puzzleFilter cmp (val `div` x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
     | otherwise = []
 
+-- Bonus question - in how many ways a list can be represented in a way that the sum of al its integers equal to n ?
+
+howAdd :: Int -> [[Int]]
+howAdd cmp = concat $ subHowAdd cmp 1
+
+subHowAdd :: Int -> Int -> [[[Int]]]
+subHowAdd cmp n
+    | n < cmp = ((subHowAdd2 cmp n n [n]):subHowAdd cmp (n + 1))
+    | otherwise = []
+
+subHowAdd2 :: Int -> Int -> Int -> [Int] -> [[Int]]
+subHowAdd2 _ 0 _ outxs = []
+subHowAdd2 cmp n n2 outxs
+    | n2 < cmp =  subHowAdd2 cmp n (n2 + n) (n:outxs) ++ 
+                  subHowAdd2 cmp (n - 1) n2 outxs
+    | n2 > cmp = subHowAdd2 cmp (n - 1) n2 outxs
+    | otherwise = unique . permu $ outxs
+
+
+
+
+
+
+
+
 
 
 
