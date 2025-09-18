@@ -2485,9 +2485,6 @@ subHowAdd2 cmp n n2 outxs
           
 data PTree a = PNode a [[PTree a]] deriving Show
 
---ptree1 :: PTree Int
---ptree1 = PNode 12 [PNode 1 [], PNode 2 []]
-
 howAddIntricated :: [[Int]] -> [[PTree Int]]
 howAddIntricated []= []
 howAddIntricated (xs:xss) = 
