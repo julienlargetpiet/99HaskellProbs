@@ -2440,6 +2440,34 @@ subCalc2 (x:xs) outxs
     | otherwise = subCalc2 xs (outxs ++ [x])
 
 
+parserPar :: [Char] -> ([Int], [Int])
+parserPar xs = subParserPar xs [] [] [] 0 0
+
+subParserPar :: [Char] -> [Int] -> [Int] -> [Int] -> Int -> Int
+                -> ([Int], [Int])
+subParserPar [] ids nums _ _ _ = (ids, nums)
+subParserPar (x:xs) ids nums valxs n n2
+    | x == '(' = 
+        let newids = ids ++ [n]
+            newnums = nums ++ [n2]
+            newvalxs = map (\x -> x + 1) valxs
+            newvalxs2 = newvalxs ++ [1]
+        in subParserPar xs newids newnums newvalxs2 (n + 1) (n2 + 1)
+    | x == ')' = 
+        let newvalxs = map (\x -> x - 1) valxs 
+            idx = findFirstZero (reverse newvalxs) 0
+            idx2 = (length valxs) - idx - 1
+            newids = ids ++ [n]
+            newnums = nums ++ [(nums !! idx2)]
+        in subParserPar xs newids newnums (0:newvalxs) (n + 1) n2
+    | otherwise = subParserPar xs ids nums valxs (n + 1) n2
+
+findFirstZero :: [Int] -> Int -> Int
+findFirstZero (xi:xsi) n
+              | xi == 0 = n
+              | otherwise = findFirstZero xsi (n + 1)
+          
+
 
 
 
