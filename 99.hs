@@ -2390,17 +2390,30 @@ groupParenthesis ids nbxs opxs =
 
 -- Bonus question, right a calculator
 
---calc :: [Char] -> [Char]
---calc xs = 
---    let newxs = (('c':xs) ++ [')']) 
---        (ids, nums) = parserPar newxs
---    in subCalc newxs ids nums
---    
---subCalc :: [Char] -> [Int] -> [Int] -> [Char]
---subCalc xs [] [] = xs
---subCalc xs ids nums = 
---    let 
-
+calc :: [Char] -> [Char]
+calc xs = 
+    let (ids, nums) = parserPar xs
+        newxs = subCalc xs ids nums
+    in protoCalc newxs
+    
+subCalc :: [Char] -> [Int] -> [Int] -> [Char]
+subCalc xs [] [] = xs
+subCalc xs ids nums = 
+    let curmax = myMax nums
+        [id1, id2] = grepn2 curmax nums
+        idstrt = (ids !! id2)
+        idstop = (ids !! id1)
+        xsstrt = if idstrt > 0
+                 then getRangeList xs [0..(idstrt - 1)]
+                 else []
+        xsstop = if idstop + 1 < length xs
+                 then getRangeList xs [(idstop + 1)..(length xs - 1)]
+                 else []
+        xsbetween = getRangeList xs [(idstrt + 1)..(idstop - 1)]
+        rslt = protoCalc xsbetween
+        newxs = xsstrt ++ rslt ++ xsstop
+        (newids, newnums) = parserPar newxs
+    in subCalc newxs newids newnums
 
 protoCalc :: [Char] -> [Char]
 protoCalc xs = 
