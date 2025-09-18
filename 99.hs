@@ -2388,9 +2388,23 @@ groupParenthesis ids nbxs opxs =
           substract (x:xs) = ((x - 1):(substract xs))
 
 
+-- Bonus question, right a calculator
+
+--calc :: [Char] -> [Char]
+--calc xs = 
+--    let newxs = (('c':xs) ++ [')']) 
+--        (ids, nums) = parserPar newxs
+--    in subCalc newxs ids nums
+--    
+--subCalc :: [Char] -> [Int] -> [Int] -> [Char]
+--subCalc xs [] [] = xs
+--subCalc xs ids nums = 
+--    let 
+
+
 protoCalc :: [Char] -> [Char]
 protoCalc xs = 
-    let outxs = subCalc2 (subCalc xs []) []
+    let outxs = subProtoCalc2 (subProtoCalc xs []) []
     in outxs
 
 takeBack :: [Char] -> [Char]
@@ -2405,39 +2419,39 @@ takeTailN (x:xs)
     | not (x `elem` "+-*/") = takeTailN xs
     | otherwise = x:xs
 
-subCalc :: [Char] -> [Char] -> [Char]
-subCalc [] outxs = outxs
-subCalc (x:xs) outxs
+subProtoCalc :: [Char] -> [Char] -> [Char]
+subProtoCalc [] outxs = outxs
+subProtoCalc (x:xs) outxs
     | x == '*' = 
         let val1 = read . reverse . takeBack . reverse $ outxs
             val2 = read . takeBack $ xs
             newoutxs = reverse . takeTailN . reverse $ outxs
             newxs = takeTailN xs
-        in subCalc newxs (newoutxs ++ (show (val1 * val2)))
+        in subProtoCalc newxs (newoutxs ++ (show (val1 * val2)))
     | x == '/' = 
         let val1 = read . reverse . takeBack . reverse $ outxs
             val2 = read . takeBack $ xs
             newoutxs = reverse . takeTailN . reverse $ outxs
             newxs = takeTailN xs
-        in subCalc newxs (newoutxs ++ (show (val1 `div` val2)))
-    | otherwise = subCalc xs (outxs ++ [x])
+        in subProtoCalc newxs (newoutxs ++ (show (val1 `div` val2)))
+    | otherwise = subProtoCalc xs (outxs ++ [x])
 
-subCalc2 :: [Char] -> [Char] -> [Char]
-subCalc2 [] outxs = outxs
-subCalc2 (x:xs) outxs
+subProtoCalc2 :: [Char] -> [Char] -> [Char]
+subProtoCalc2 [] outxs = outxs
+subProtoCalc2 (x:xs) outxs
     | x == '+' = 
         let val1 = read . reverse . takeBack . reverse $ outxs
             val2 = read . takeBack $ xs
             newoutxs = reverse . takeTailN . reverse $ outxs
             newxs = takeTailN xs
-        in subCalc2 newxs (newoutxs ++ (show (val1 + val2)))
+        in subProtoCalc2 newxs (newoutxs ++ (show (val1 + val2)))
     | x == '-' = 
         let val1 = read . reverse . takeBack . reverse $ outxs
             val2 = read . takeBack $ xs
             newoutxs = reverse . takeTailN . reverse $ outxs
             newxs = takeTailN xs
-        in subCalc2 newxs (newoutxs ++ (show (val1 - val2)))
-    | otherwise = subCalc2 xs (outxs ++ [x])
+        in subProtoCalc2 newxs (newoutxs ++ (show (val1 - val2)))
+    | otherwise = subProtoCalc2 xs (outxs ++ [x])
 
 
 parserPar :: [Char] -> ([Int], [Int])
@@ -2459,7 +2473,7 @@ subParserPar (x:xs) ids nums valxs n n2
             idx2 = (length valxs) - idx - 1
             newids = ids ++ [n]
             newnums = nums ++ [(nums !! idx2)]
-        in subParserPar xs newids newnums (0:newvalxs) (n + 1) n2
+        in subParserPar xs newids newnums (newvalxs ++ [0]) (n + 1) n2
     | otherwise = subParserPar xs ids nums valxs (n + 1) n2
 
 findFirstZero :: [Int] -> Int -> Int
@@ -2467,6 +2481,11 @@ findFirstZero (xi:xsi) n
               | xi == 0 = n
               | otherwise = findFirstZero xsi (n + 1)
           
+
+
+
+
+
 
 
 
