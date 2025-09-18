@@ -2348,21 +2348,101 @@ subHowAdd2 cmp n n2 outxs
 
 -- 93, another approach that includes parenthesis order
 
+data PTree a b = PNode ([[a]], [b]) [PTree a b] deriving (Show, Eq)
+type GraphOper = [(Int, Bool)]
+
 --puzzle2 :: [Int] -> [[Char]]
---puzzle2 (x:x2:xs) = 
---    filter (not . null) [concat (puzzleFilter2 x x2 xs opers (show x2)) | opers <- sequence (replicate l "+-*/")]
---    where l = length (xs)
---
---puzzleFilter2 :: Int -> Int -> [Int] -> [Char] -> [Char] -> [[Char]]
---puzzleFilter2 cmp val xs [] outxs = if val == cmp
---                                   then outxs ++ " = " ++ show val
---                                   else []
---puzzleFilter2 cmp val (x:xs) (op:operxs) outxs 
---    | op == '+' = puzzleFilter2 cmp (val + x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
---    | op == '-' = puzzleFilter2 cmp (val - x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
---    | op == '*' = puzzleFilter2 cmp (val * x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
---    | op == '/' && x /= 0 = puzzleFilter2 cmp (val `div` x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
---    | otherwise = []
+--puzzle2 (x:xs) = 
+--    let grpxs = howAdd l
+--        
+--    in 
+--    where l = length xs - 1
+
+testptree :: PTree Int Char
+testptree = 
+    PNode ([[1, 2], [3, 4, 5, 6, 7], [8, 9, 10, 11, 12]], "-*") [
+           PNode ([[1], [2]], "/") [PNode ([[1]], "") [], PNode ([[2]], "") []]
+          ,PNode ([[3], [4, 5], [6, 7]], "++") [PNode ([[3]], "") []
+                           , PNode ([[4], [5]],"*") [PNode ([[4]], "") []
+                                                ,PNode ([[5]], "") []]
+                           , PNode ([[6], [7]], "+") [PNode ([[6]], "") []
+                                                   ,PNode ([[7]], "") []
+                           ]]
+          ,PNode ([[8], [9, 10], [11, 12]], "++") [PNode ([[8]], "") []
+                           , PNode ([[9], [10]],"*") [PNode ([[9]], "") []
+                                                ,PNode ([[10]], "") []]
+                           , PNode ([[11], [12]], "+") [PNode ([[11]], "") []
+                                                   ,PNode ([[12]], "") []
+                           ]]]
+
+--fillPTree :: [Int] -> PNode Int Char -> PNode Int Char
+--fillPTree xs (PNode () restxs)
+
+groupParenthesis :: [Int] -> [Int] -> [Char] -> ([[Int]], [[Char]])
+groupParenthesis ids nbxs opxs = 
+    let newnbxs = groupIdx ids nbxs
+        newids = substract ids
+        newopxs = groupIdx newids opxs
+    in (newnbxs, newopxs)
+    where substract [] = []
+          substract (x:xs) = ((x - 1):(substract xs))
+
+
+protoCalc :: [Char] -> [Char]
+protoCalc xs = 
+    let outxs = subCalc2 (subCalc xs []) []
+    in outxs
+
+takeBack :: [Char] -> [Char]
+takeBack [] = []
+takeBack (x:xs) 
+    | not (x `elem` "+-*/") = (x:takeBack xs)
+    | otherwise = []
+
+takeTailN :: [Char] -> [Char]
+takeTailN [] = []
+takeTailN (x:xs)
+    | not (x `elem` "+-*/") = takeTailN xs
+    | otherwise = x:xs
+
+subCalc :: [Char] -> [Char] -> [Char]
+subCalc [] outxs = outxs
+subCalc (x:xs) outxs
+    | x == '*' = 
+        let val1 = read . reverse . takeBack . reverse $ outxs
+            val2 = read . takeBack $ xs
+            newoutxs = reverse . takeTailN . reverse $ outxs
+            newxs = takeTailN xs
+        in subCalc newxs (newoutxs ++ (show (val1 * val2)))
+    | x == '/' = 
+        let val1 = read . reverse . takeBack . reverse $ outxs
+            val2 = read . takeBack $ xs
+            newoutxs = reverse . takeTailN . reverse $ outxs
+            newxs = takeTailN xs
+        in subCalc newxs (newoutxs ++ (show (val1 `div` val2)))
+    | otherwise = subCalc xs (outxs ++ [x])
+
+subCalc2 :: [Char] -> [Char] -> [Char]
+subCalc2 [] outxs = outxs
+subCalc2 (x:xs) outxs
+    | x == '+' = 
+        let val1 = read . reverse . takeBack . reverse $ outxs
+            val2 = read . takeBack $ xs
+            newoutxs = reverse . takeTailN . reverse $ outxs
+            newxs = takeTailN xs
+        in subCalc2 newxs (newoutxs ++ (show (val1 + val2)))
+    | x == '-' = 
+        let val1 = read . reverse . takeBack . reverse $ outxs
+            val2 = read . takeBack $ xs
+            newoutxs = reverse . takeTailN . reverse $ outxs
+            newxs = takeTailN xs
+        in subCalc2 newxs (newoutxs ++ (show (val1 - val2)))
+    | otherwise = subCalc2 xs (outxs ++ [x])
+
+
+
+
+
 
 
 
