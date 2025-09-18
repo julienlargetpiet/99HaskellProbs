@@ -6,6 +6,113 @@ import Data.List (sortOn)
 
 -- helpers
 
+-- Bonus question, right a calculator
+
+calc :: [Char] -> [Char]
+calc xs = 
+    let (ids, nums) = parserPar xs
+        newxs = subCalc xs ids nums
+    in protoCalc newxs
+    
+subCalc :: [Char] -> [Int] -> [Int] -> [Char]
+subCalc xs [] [] = xs
+subCalc xs ids nums = 
+    let curmax = myMax nums
+        [id1, id2] = grepn2 curmax nums
+        idstrt = (ids !! id2)
+        idstop = (ids !! id1)
+        xsstrt = if idstrt > 0
+                 then getRangeList xs [0..(idstrt - 1)]
+                 else []
+        xsstop = if idstop + 1 < length xs
+                 then getRangeList xs [(idstop + 1)..(length xs - 1)]
+                 else []
+        xsbetween = getRangeList xs [(idstrt + 1)..(idstop - 1)]
+        rslt = protoCalc xsbetween
+        newxs = xsstrt ++ rslt ++ xsstop
+        (newids, newnums) = parserPar newxs
+    in subCalc newxs newids newnums
+
+protoCalc :: [Char] -> [Char]
+protoCalc xs = 
+    let outxs = subProtoCalc2 (subProtoCalc xs []) []
+    in outxs
+
+takeBack :: [Char] -> [Char]
+takeBack [] = []
+takeBack (x:xs) 
+    | not (x `elem` "+-*/") = (x:takeBack xs)
+    | otherwise = []
+
+takeTailN :: [Char] -> [Char]
+takeTailN [] = []
+takeTailN (x:xs)
+    | not (x `elem` "+-*/") = takeTailN xs
+    | otherwise = x:xs
+
+subProtoCalc :: [Char] -> [Char] -> [Char]
+subProtoCalc [] outxs = outxs
+subProtoCalc (x:xs) outxs
+    | x == '*' = 
+        let val1 = read . reverse . takeBack . reverse $ outxs
+            val2 = read . takeBack $ xs
+            newoutxs = reverse . takeTailN . reverse $ outxs
+            newxs = takeTailN xs
+        in subProtoCalc newxs (newoutxs ++ (show (val1 * val2)))
+    | x == '/' = 
+        let val1 = read . reverse . takeBack . reverse $ outxs
+            val2 = read . takeBack $ xs
+            newoutxs = reverse . takeTailN . reverse $ outxs
+            newxs = takeTailN xs
+        in subProtoCalc newxs (newoutxs ++ (show (val1 `div` val2)))
+    | otherwise = subProtoCalc xs (outxs ++ [x])
+
+subProtoCalc2 :: [Char] -> [Char] -> [Char]
+subProtoCalc2 [] outxs = outxs
+subProtoCalc2 (x:xs) outxs
+    | x == '+' = 
+        let val1 = read . reverse . takeBack . reverse $ outxs
+            val2 = read . takeBack $ xs
+            newoutxs = reverse . takeTailN . reverse $ outxs
+            newxs = takeTailN xs
+        in subProtoCalc2 newxs (newoutxs ++ (show (val1 + val2)))
+    | x == '-' = 
+        let val1 = read . reverse . takeBack . reverse $ outxs
+            val2 = read . takeBack $ xs
+            newoutxs = reverse . takeTailN . reverse $ outxs
+            newxs = takeTailN xs
+        in subProtoCalc2 newxs (newoutxs ++ (show (val1 - val2)))
+    | otherwise = subProtoCalc2 xs (outxs ++ [x])
+
+
+parserPar :: [Char] -> ([Int], [Int])
+parserPar xs = subParserPar xs [] [] [] 0 0
+
+subParserPar :: [Char] -> [Int] -> [Int] -> [Int] -> Int -> Int
+                -> ([Int], [Int])
+subParserPar [] ids nums _ _ _ = (ids, nums)
+subParserPar (x:xs) ids nums valxs n n2
+    | x == '(' = 
+        let newids = ids ++ [n]
+            newnums = nums ++ [n2]
+            newvalxs = map (\x -> x + 1) valxs
+            newvalxs2 = newvalxs ++ [1]
+        in subParserPar xs newids newnums newvalxs2 (n + 1) (n2 + 1)
+    | x == ')' = 
+        let newvalxs = map (\x -> x - 1) valxs 
+            idx = findFirstZero (reverse newvalxs) 0
+            idx2 = (length valxs) - idx - 1
+            newids = ids ++ [n]
+            newnums = nums ++ [(nums !! idx2)]
+        in subParserPar xs newids newnums (newvalxs ++ [0]) (n + 1) n2
+    | otherwise = subParserPar xs ids nums valxs (n + 1) n2
+
+findFirstZero :: [Int] -> Int -> Int
+findFirstZero (xi:xsi) n
+              | xi == 0 = n
+              | otherwise = findFirstZero xsi (n + 1)
+
+
 groupIdx :: [Int] -> [a] -> [[a]]
 groupIdx [] _ = []
 groupIdx _ [] = []
@@ -2348,152 +2455,69 @@ subHowAdd2 cmp n n2 outxs
 
 -- 93, another approach that includes parenthesis order
 
-data PTree a b = PNode ([[a]], [b]) [PTree a b] deriving (Show, Eq)
-type GraphOper = [(Int, Bool)]
+--data PTree a b = PNode ([[a]], [b]) [PTree a b] deriving (Show, Eq)
+--
+--testptree :: PTree Int Char
+--testptree = 
+--    PNode ([[1, 2], [3, 4, 5, 6, 7], [8, 9, 10, 11, 12]], "-*") [
+--           PNode ([[1], [2]], "/") [PNode ([[1]], "") [], PNode ([[2]], "") []]
+--          ,PNode ([[3], [4, 5], [6, 7]], "++") [PNode ([[3]], "") []
+--                           , PNode ([[4], [5]],"*") [PNode ([[4]], "") []
+--                                                ,PNode ([[5]], "") []]
+--                           , PNode ([[6], [7]], "+") [PNode ([[6]], "") []
+--                                                   ,PNode ([[7]], "") []
+--                           ]]
+--          ,PNode ([[8], [9, 10], [11, 12]], "++") [PNode ([[8]], "") []
+--                           , PNode ([[9], [10]],"*") [PNode ([[9]], "") []
+--                                                ,PNode ([[10]], "") []]
+--                           , PNode ([[11], [12]], "+") [PNode ([[11]], "") []
+--                                                   ,PNode ([[12]], "") []
+--                           ]]]
 
---puzzle2 :: [Int] -> [[Char]]
---puzzle2 (x:xs) = 
---    let grpxs = howAdd l
---        
---    in 
---    where l = length xs - 1
-
-testptree :: PTree Int Char
-testptree = 
-    PNode ([[1, 2], [3, 4, 5, 6, 7], [8, 9, 10, 11, 12]], "-*") [
-           PNode ([[1], [2]], "/") [PNode ([[1]], "") [], PNode ([[2]], "") []]
-          ,PNode ([[3], [4, 5], [6, 7]], "++") [PNode ([[3]], "") []
-                           , PNode ([[4], [5]],"*") [PNode ([[4]], "") []
-                                                ,PNode ([[5]], "") []]
-                           , PNode ([[6], [7]], "+") [PNode ([[6]], "") []
-                                                   ,PNode ([[7]], "") []
-                           ]]
-          ,PNode ([[8], [9, 10], [11, 12]], "++") [PNode ([[8]], "") []
-                           , PNode ([[9], [10]],"*") [PNode ([[9]], "") []
-                                                ,PNode ([[10]], "") []]
-                           , PNode ([[11], [12]], "+") [PNode ([[11]], "") []
-                                                   ,PNode ([[12]], "") []
-                           ]]]
-
---fillPTree :: [Int] -> PNode Int Char -> PNode Int Char
---fillPTree xs (PNode () restxs)
-
-groupParenthesis :: [Int] -> [Int] -> [Char] -> ([[Int]], [[Char]])
-groupParenthesis ids nbxs opxs = 
-    let newnbxs = groupIdx ids nbxs
-        newids = substract ids
-        newopxs = groupIdx newids opxs
-    in (newnbxs, newopxs)
-    where substract [] = []
-          substract (x:xs) = ((x - 1):(substract xs))
-
-
--- Bonus question, right a calculator
-
-calc :: [Char] -> [Char]
-calc xs = 
-    let (ids, nums) = parserPar xs
-        newxs = subCalc xs ids nums
-    in protoCalc newxs
-    
-subCalc :: [Char] -> [Int] -> [Int] -> [Char]
-subCalc xs [] [] = xs
-subCalc xs ids nums = 
-    let curmax = myMax nums
-        [id1, id2] = grepn2 curmax nums
-        idstrt = (ids !! id2)
-        idstop = (ids !! id1)
-        xsstrt = if idstrt > 0
-                 then getRangeList xs [0..(idstrt - 1)]
-                 else []
-        xsstop = if idstop + 1 < length xs
-                 then getRangeList xs [(idstop + 1)..(length xs - 1)]
-                 else []
-        xsbetween = getRangeList xs [(idstrt + 1)..(idstop - 1)]
-        rslt = protoCalc xsbetween
-        newxs = xsstrt ++ rslt ++ xsstop
-        (newids, newnums) = parserPar newxs
-    in subCalc newxs newids newnums
-
-protoCalc :: [Char] -> [Char]
-protoCalc xs = 
-    let outxs = subProtoCalc2 (subProtoCalc xs []) []
-    in outxs
-
-takeBack :: [Char] -> [Char]
-takeBack [] = []
-takeBack (x:xs) 
-    | not (x `elem` "+-*/") = (x:takeBack xs)
-    | otherwise = []
-
-takeTailN :: [Char] -> [Char]
-takeTailN [] = []
-takeTailN (x:xs)
-    | not (x `elem` "+-*/") = takeTailN xs
-    | otherwise = x:xs
-
-subProtoCalc :: [Char] -> [Char] -> [Char]
-subProtoCalc [] outxs = outxs
-subProtoCalc (x:xs) outxs
-    | x == '*' = 
-        let val1 = read . reverse . takeBack . reverse $ outxs
-            val2 = read . takeBack $ xs
-            newoutxs = reverse . takeTailN . reverse $ outxs
-            newxs = takeTailN xs
-        in subProtoCalc newxs (newoutxs ++ (show (val1 * val2)))
-    | x == '/' = 
-        let val1 = read . reverse . takeBack . reverse $ outxs
-            val2 = read . takeBack $ xs
-            newoutxs = reverse . takeTailN . reverse $ outxs
-            newxs = takeTailN xs
-        in subProtoCalc newxs (newoutxs ++ (show (val1 `div` val2)))
-    | otherwise = subProtoCalc xs (outxs ++ [x])
-
-subProtoCalc2 :: [Char] -> [Char] -> [Char]
-subProtoCalc2 [] outxs = outxs
-subProtoCalc2 (x:xs) outxs
-    | x == '+' = 
-        let val1 = read . reverse . takeBack . reverse $ outxs
-            val2 = read . takeBack $ xs
-            newoutxs = reverse . takeTailN . reverse $ outxs
-            newxs = takeTailN xs
-        in subProtoCalc2 newxs (newoutxs ++ (show (val1 + val2)))
-    | x == '-' = 
-        let val1 = read . reverse . takeBack . reverse $ outxs
-            val2 = read . takeBack $ xs
-            newoutxs = reverse . takeTailN . reverse $ outxs
-            newxs = takeTailN xs
-        in subProtoCalc2 newxs (newoutxs ++ (show (val1 - val2)))
-    | otherwise = subProtoCalc2 xs (outxs ++ [x])
-
-
-parserPar :: [Char] -> ([Int], [Int])
-parserPar xs = subParserPar xs [] [] [] 0 0
-
-subParserPar :: [Char] -> [Int] -> [Int] -> [Int] -> Int -> Int
-                -> ([Int], [Int])
-subParserPar [] ids nums _ _ _ = (ids, nums)
-subParserPar (x:xs) ids nums valxs n n2
-    | x == '(' = 
-        let newids = ids ++ [n]
-            newnums = nums ++ [n2]
-            newvalxs = map (\x -> x + 1) valxs
-            newvalxs2 = newvalxs ++ [1]
-        in subParserPar xs newids newnums newvalxs2 (n + 1) (n2 + 1)
-    | x == ')' = 
-        let newvalxs = map (\x -> x - 1) valxs 
-            idx = findFirstZero (reverse newvalxs) 0
-            idx2 = (length valxs) - idx - 1
-            newids = ids ++ [n]
-            newnums = nums ++ [(nums !! idx2)]
-        in subParserPar xs newids newnums (newvalxs ++ [0]) (n + 1) n2
-    | otherwise = subParserPar xs ids nums valxs (n + 1) n2
-
-findFirstZero :: [Int] -> Int -> Int
-findFirstZero (xi:xsi) n
-              | xi == 0 = n
-              | otherwise = findFirstZero xsi (n + 1)
+--groupParenthesis :: [Int] -> [Int] -> [Char] -> ([[Int]], [[Char]])
+--groupParenthesis ids nbxs opxs = 
+--    let newnbxs = groupIdx ids nbxs
+--        newids = substract ids
+--        newopxs = groupIdx newids opxs
+--    in (newnbxs, newopxs)
+--    where substract [] = []
+--          substract (x:xs) = ((x - 1):(substract xs))
           
+data PTree a = PNode a [[PTree a]] deriving Show
+
+--ptree1 :: PTree Int
+--ptree1 = PNode 12 [PNode 1 [], PNode 2 []]
+
+howAddIntricated :: [[Int]] -> [[PTree Int]]
+howAddIntricated []= []
+howAddIntricated (xs:xss) = 
+    let outxs = map (\x -> if x == 1
+                   then PNode 1 []
+                   else PNode x ((howAddIntricated (howAdd x)))) xs
+    in [outxs] ++ howAddIntricated xss
+
+
+examplePTree :: [[PTree Int]]
+examplePTree = [
+    [PNode 1 [],PNode 1 [],PNode 1 [],PNode 1 []],
+    [PNode 2 [[PNode 1 [],PNode 1 []]], PNode 2 [[PNode 1 [],PNode 1 []]]],
+    [PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 [],PNode 1 []],
+    [PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],
+    [PNode 1 [],PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]],
+    [PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []],
+              [PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],
+              [PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]],PNode 1 []],
+  [PNode 1 [], PNode 3 [
+                       [PNode 1 [],PNode 1 [],PNode 1 []],
+                       [PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],
+                       [PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]]]]
+
+
+
+
+
+
+
 
 
 
