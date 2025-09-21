@@ -8,6 +8,22 @@ import Data.List (sortOn)
 
 -- Bonus question, right a calculator
 
+tailn :: Int -> [a] -> [a]
+tailn n xs = subTailn n xs 1
+
+subTailn :: Int -> [a] -> Int -> [a]
+subTailn cmp (_:xs) n
+    | n < cmp = subTailn cmp xs (n + 1)
+    | otherwise = xs
+
+initn :: Int -> [a] -> [a]
+initn n xs = reverse $ subInitn n (reverse xs) 1
+
+subInitn :: Int -> [a] -> Int -> [a]
+subInitn cmp (_:xs) n
+    | n < cmp = subInitn cmp xs (n + 1)
+    | otherwise = xs
+
 calc :: [Char] -> [Char]
 calc xs = 
     let (ids, nums) = parserPar xs
@@ -2419,21 +2435,21 @@ testFunc pxs = case betterKnightTo2 pxs of
 
 -- operations order is purely from left to right
 
-puzzle :: [Int] -> [[Char]]
-puzzle (x:x2:xs) = 
-    filter (not . null) [puzzleFilter x x2 xs opers (show x2) | opers <- sequence (replicate l "+-*/")]
-    where l = length (xs)
-
-puzzleFilter :: Int -> Int -> [Int] -> [Char] -> [Char] -> [Char]
-puzzleFilter cmp val xs [] outxs = if val == cmp
-                                   then outxs ++ " = " ++ show val
-                                   else []
-puzzleFilter cmp val (x:xs) (op:operxs) outxs 
-    | op == '+' = puzzleFilter cmp (val + x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
-    | op == '-' = puzzleFilter cmp (val - x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
-    | op == '*' = puzzleFilter cmp (val * x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
-    | op == '/' && x /= 0 = puzzleFilter cmp (val `div` x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
-    | otherwise = []
+--puzzle :: [Int] -> [[Char]]
+--puzzle (x:x2:xs) = 
+--    filter (not . null) [puzzleFilter x x2 xs opers (show x2) | opers <- sequence (replicate l "+-*/")]
+--    where l = length (xs)
+--
+--puzzleFilter :: Int -> Int -> [Int] -> [Char] -> [Char] -> [Char]
+--puzzleFilter cmp val xs [] outxs = if val == cmp
+--                                   then outxs ++ " = " ++ show val
+--                                   else []
+--puzzleFilter cmp val (x:xs) (op:operxs) outxs 
+--    | op == '+' = puzzleFilter cmp (val + x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+--    | op == '-' = puzzleFilter cmp (val - x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+--    | op == '*' = puzzleFilter cmp (val * x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+--    | op == '/' && x /= 0 = puzzleFilter cmp (val `div` x) xs operxs (outxs ++ [' ', op, ' '] ++ show x)
+--    | otherwise = []
 
 -- Bonus question - in how many ways a list can be represented in a way that the sum of al its integers equal to n ?
 
@@ -2454,34 +2470,6 @@ subHowAdd2 cmp n n2 outxs
     | otherwise = unique . permu $ outxs
 
 -- 93, another approach that includes parenthesis order
-
---data PTree a b = PNode ([[a]], [b]) [PTree a b] deriving (Show, Eq)
---
---testptree :: PTree Int Char
---testptree = 
---    PNode ([[1, 2], [3, 4, 5, 6, 7], [8, 9, 10, 11, 12]], "-*") [
---           PNode ([[1], [2]], "/") [PNode ([[1]], "") [], PNode ([[2]], "") []]
---          ,PNode ([[3], [4, 5], [6, 7]], "++") [PNode ([[3]], "") []
---                           , PNode ([[4], [5]],"*") [PNode ([[4]], "") []
---                                                ,PNode ([[5]], "") []]
---                           , PNode ([[6], [7]], "+") [PNode ([[6]], "") []
---                                                   ,PNode ([[7]], "") []
---                           ]]
---          ,PNode ([[8], [9, 10], [11, 12]], "++") [PNode ([[8]], "") []
---                           , PNode ([[9], [10]],"*") [PNode ([[9]], "") []
---                                                ,PNode ([[10]], "") []]
---                           , PNode ([[11], [12]], "+") [PNode ([[11]], "") []
---                                                   ,PNode ([[12]], "") []
---                           ]]]
-
---groupParenthesis :: [Int] -> [Int] -> [Char] -> ([[Int]], [[Char]])
---groupParenthesis ids nbxs opxs = 
---    let newnbxs = groupIdx ids nbxs
---        newids = substract ids
---        newopxs = groupIdx newids opxs
---    in (newnbxs, newopxs)
---    where substract [] = []
---          substract (x:xs) = ((x - 1):(substract xs))
           
 data PTree a = PNode a [[PTree a]] deriving Show
 
@@ -2569,8 +2557,29 @@ subCreateFormula _ [] outxs = outxs
 subCreateFormula (num:nums) (op:ops) outxs = subCreateFormula nums ops (outxs ++ [op] ++ (show num))
 
 
+--createFormula2 :: [([Char], Int)] -> [Char] -> [Char]
+--createFormula2 [] _ = []
+--createFormula2 _ [] = []
+--createFormula2 ((x, _):xs) (op:ops)
+--    | length x == 1 = x ++ [op] ++ createFormula2 xs ops
+--    | otherwise = 
+--        let newops = getRangeList ops [((((length x) - 1) `div` 2) - 1)..(length ops - 1)]
+--        in x ++ [(head newops)] ++ createFormula2 xs (tail newops)
 
+--updateOperators :: [([Char], Int)] -> [Char] -> [Char] -> [Char]
+--updateOperators [] _ outops = outops
+--updateOperators ((x, _):xs) ops n =
+--    let nb = length $ grepmn2 "+-*/" x
+--    in if nb /= 0
+--       then 
+--           let newops = deleteListElemn ops [n..(nb)]
+--           in updateOperators xs newops (n + 1)
+--       else updateOperators xs (tail ops) (head ops)
 
+--puzzle :: Int -> [Int] -> [Char] -> [[Char]]
+--puzzle rslt nbs ops = 
+--    let outhowadd = howAdd (length nbs)
+--        refptree = howAddIntricated outhowadd
 
 
 
