@@ -2510,33 +2510,55 @@ examplePTree = [
                   [PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],
                   [PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]]]]
 
-examplePTree2 :: [[PTree Int]]
-examplePTree2 = [[PNode 1 [],PNode 1 [],PNode 1 [], PNode 1 []],
+examplePTree2 :: PTree Int
+examplePTree2 = PNode 4 [[PNode 1 [],PNode 1 [],PNode 1 [], PNode 1 []],
               [PNode 2 [[PNode 1 [], PNode 1 []]],PNode 1 [], PNode 1 []],
               [PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]], PNode 1 []],
               [PNode 1 [], PNode 1 [], PNode 2 [[PNode 1 [], PNode 1 []]]],
               [PNode 2 [[PNode 1 [], PNode 1 []]], PNode 2 [[PNode 1 [], PNode 1 []]]],
-              [PNode 3 [[PNode 2 [[PNode 1 [], PNode 1 []]]], 
-                        [PNode 1 []]], PNode 1 []],
+              [PNode 3 [[PNode 2 [[PNode 1 [], PNode 1 []]]], [PNode 1 []]], 
+                        PNode 1 []],
               [PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]], 
-                                       PNode 1 []],
+                        PNode 1 []],
               [PNode 1 [], 
                   PNode 3 [[PNode 2 [[PNode 1 [], PNode 1 []]]], [PNode 1 []]]],
               [PNode 1 [], 
                   PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]]]
 
+examplePTree3 :: PTree Int
+examplePTree3 = PNode 3 [[PNode 2 [[PNode 1 [], PNode 1 []]]], [PNode 1 []]]
+
+examplePTree3b :: PTree Int
+examplePTree3b = PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]
+
+examplePTree4 :: PTree Int
+examplePTree4 = PNode 3 [[PNode 1 [], PNode 1 []], [PNode 1 []]]
+
+examplePTree4b :: PTree Int
+examplePTree4b = PNode 2 [[PNode 1 [], PNode 1 []]]
+
+examplePTree5 :: PTree Int
+examplePTree5 = PNode 4 [[PNode 1 []], [PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]]]
+
+examplePTree5b :: PTree Int
+examplePTree5b = PNode 4 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]], [PNode 1 []]]
+
 subDividing :: [Int] -> [Int] -> Int -> [[Int]]
 subDividing _ [] _ = []
 subDividing ids (n:ns) n2 = (getRangeList ids (map (\x -> x + n2) [0..(n - 1)])):subDividing ids ns (n2 + n)
 
---calculatePTree :: PTree Int -> [Char] -> [Int] -> [[Char]]
---calculatePTree ptrees xs ns
---    | all (\(PNode x _) -> x == 1) ptrees = []
---    | otherwise =  concat $ map (
---                \restxs -> 
---                    let outids = idsSubDividing ns
---                    in concat (map (\ptree -> calculatePTree ptree xs [0]) restxs)
---                        ) restxss
+calculatePTree :: PTree Int -> [Char] -> [Int] -> Int -> [([Char], Int)]
+calculatePTree (PNode x ptrees) xs ns n = 
+    let outids = subDividing ns (map (\vl -> sum (map (\(PNode vl2 _) -> vl2) vl)) ptrees) 0
+    in concatMap (
+                \(restxs, curids) ->
+                  if all (\(PNode vl _) -> vl == 1) restxs
+                  then [(getRangeList xs curids, n)] 
+                  else
+                        let outids2 = subDividing curids (map (\(PNode vl _) -> vl) restxs) 0
+                        in concatMap (\(ptree, val) -> 
+                calculatePTree ptree xs val (n + 1)) (zip restxs outids2)
+                ) (zip ptrees outids)
 
 createFormula :: [Int] -> [Char] -> [Char]
 createFormula (x:nums) ops = subCreateFormula nums ops (show x)
@@ -2546,24 +2568,6 @@ subCreateFormula [] _ outxs = outxs
 subCreateFormula _ [] outxs = outxs
 subCreateFormula (num:nums) (op:ops) outxs = subCreateFormula nums ops (outxs ++ [op] ++ (show num))
 
---calculateAll :: [Int] -> [Char] -> Int -> [[Char]]
---calculateAll nums ops rslt = 
---    let ptree = howAddIntricated (howAdd l)
---    in concat [calculateAll2 ptree (createFormula nums curops) rslt | curops <- sequence (replicate (l - 1) ops)]
---    where l = length nums
---
---calculateAll2 :: [[PTree Int]] -> [Char] -> Int -> [[Char]]
---calculateAll2 [] _ _ = []
---calculateAll2 (x:xs) formula rslt = 
---    let outxs = subCalculateAll x formula rslt
---    in outxs ++ calculateAll2 xs formula rslt
---
---subCalculateAll :: [PTree Int] -> [Char] -> Int -> [[Char]]
---subCalculateAll [] _ _ = []
---subCalculateAll (x:xs) formula rslt = 
---    let outxs = subCalculateAll2 x formula
---        outxs2 = filter (\(x, y) -> y == rslt) outxs
---    in outxs2 ++ subCalculateAll xs formula rslt
 
 
 
