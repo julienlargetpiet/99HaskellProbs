@@ -2543,11 +2543,17 @@ examplePTree5 = PNode 4 [[PNode 1 []], [PNode 3 [[PNode 1 []], [PNode 2 [[PNode 
 examplePTree5b :: PTree Int
 examplePTree5b = PNode 4 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]], [PNode 1 []]]
 
+examplePTree6 :: PTree Int
+examplePTree6 = PNode 5 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]], [PNode 2 [[PNode 1 [], PNode 1 []]]]]
+
+examplePTree7 :: PTree Int
+examplePTree7 = PNode 6 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]], [PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]]]
+
 subDividing :: [Int] -> [Int] -> Int -> [[Int]]
 subDividing _ [] _ = []
 subDividing ids (n:ns) n2 = (getRangeList ids (map (\x -> x + n2) [0..(n - 1)])):subDividing ids ns (n2 + n)
 
-calculatePTree :: PTree Int -> [[Char]] -> [Int] -> Int -> [([[Char]], Int)]
+calculatePTree :: PTree Int -> [[Char]] -> [Int] -> [[Char]] -> [([[Char]], [[Char]])]
 calculatePTree (PNode x ptrees) xs ns n = 
     let outids = subDividing ns (map (\vl -> sum (map (\(PNode vl2 _) -> vl2) vl)) ptrees) 0
     in concatMap (
@@ -2557,7 +2563,7 @@ calculatePTree (PNode x ptrees) xs ns n =
                   else
                         let outids2 = subDividing curids (map (\(PNode vl _) -> vl) restxs) 0
                         in concatMap (\(ptree, val) -> 
-                calculatePTree ptree xs val (n + 1)) (zip restxs outids2)
+                calculatePTree ptree xs val (n ++ [(foldl (\acc valb -> acc ++ show valb) "" val)])) (zip restxs outids2)
                 ) (zip ptrees outids)
 
 createFormula :: [[Char]] -> [Char] -> [Char]
@@ -2568,7 +2574,7 @@ subCreateFormula [] _ outxs = outxs
 subCreateFormula _ [] outxs = outxs
 subCreateFormula (num:nums) (op:ops) outxs = subCreateFormula nums ops (outxs ++ [op] ++ num)
 
-updateOperators :: [([Char], Int)] -> [Char] -> [Char] -> [Char]
+updateOperators :: [([Char], [[Char]])] -> [Char] -> [Char] -> [Char]
 updateOperators [] _ outops = outops
 updateOperators _ [] outops = outops
 updateOperators ((x, _):xs) (op:ops) outops =
@@ -2594,15 +2600,17 @@ updateOperators ((x, _):xs) (op:ops) outops =
 --    let formulas = map (\xs -> 
 --        let outxs = calculatePTree (PNode x [xs]) nbs [0..l] 0
 --            outxs2 = createFormula2 outxs ops
---            (newformula, newrslt) = evaluateFormula outxs3 ops
+--            newops = updateOperators outxs2 ops []
+--            (newformula, newrslt) = evaluateFormula outxs3 newops
 --        in (newformula, newrslt)) restxs
 --    in formulas
 --    where l = length nbs - 1
 
 --evaluateFormula :: [([Char], Int)] -> [Char] -> ([Char], [Char])
---evaluateFormula xs ops
+--evaluateFormula [x] ops = x
+--evaluateFormula xs ops = 
 
-createFormula2 :: [([[Char]], Int)] -> [Char] -> [([Char], Int)]
+createFormula2 :: [([[Char]], [[Char]])] -> [Char] -> [([Char], [[Char]])]
 createFormula2 [] _ = []
 createFormula2 ((x, n):xs) (op:ops)
     | length x == 1 = [((x !! 0), n)] ++ createFormula2 xs ops
