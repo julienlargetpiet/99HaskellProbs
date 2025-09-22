@@ -2532,7 +2532,7 @@ examplePTree3b :: PTree Int
 examplePTree3b = PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]
 
 examplePTree4 :: PTree Int
-examplePTree4 = PNode 3 [[PNode 1 [], PNode 1 []], [PNode 1 []]]
+examplePTree4 = PNode 3 [[PNode 1 [], PNode 1 [], PNode 1 []]]
 
 examplePTree4b :: PTree Int
 examplePTree4b = PNode 2 [[PNode 1 [], PNode 1 []]]
@@ -2606,9 +2606,31 @@ updateOperators ((x, _):xs) (op:ops) outops =
 --    in formulas
 --    where l = length nbs - 1
 
---evaluateFormula :: [([Char], Int)] -> [Char] -> ([Char], [Char])
---evaluateFormula [x] ops = x
---evaluateFormula xs ops = 
+evaluateFormula :: [([Char], [[Char]])] -> [([Char], [[Char]])] 
+                  -> [Char] -> ([Char], [Char])
+evaluateFormula [(x, _)] [(x2, _)] ops = (x2, protoCalc x)
+evaluateFormula xs xs2 ops = 
+    let depthxs = map (\(_, l) -> length l) xs
+        maxval = myMax depthxs
+        idx = grep2 maxval depthxs
+        (x, lst) = (xs !! idx)
+        newx = protoCalc x
+        newlst = init lst
+        ((x2, _), opidx) = case find (\((_, lval), _) -> lval == newlst) (zip xs [0..(length xs - 1)]) of
+                      Just x -> x
+                      Nothing -> (("", [""]), 0)
+        newx2 = if opidx < idx
+                then x2 ++ [(ops !! opidx)] ++ newx
+                else newx ++ [(ops !! idx)] ++ x2
+        newx2b = if opidx < idx
+                then x2 ++ [(ops !! opidx)] ++ "(" ++ x ++ ")"
+                else "(" ++ x ++ ")" ++ [(ops !! idx)] ++ x2
+        newxs = updateListElem xs opidx (newx2, newlst)
+        newxs2 = deleteListElem newxs idx
+        newxsb = updateListElem xs2 opidx (newx2b, newlst)
+        newxsb2 = deleteListElem newxsb idx
+        newops = updateOperators newxs2 ops []
+    in evaluateFormula newxs2 newxsb2 newops
 
 createFormula2 :: [([[Char]], [[Char]])] -> [Char] -> [([Char], [[Char]])]
 createFormula2 [] _ = []
