@@ -97,7 +97,7 @@ subProtoCalc (x:xs) outxs
                  then subProtoCalc newxs (newoutxs ++ (show (-val1 * val2)))
                  else if last newoutxs /= '-'
                      then subProtoCalc newxs (init newoutxs ++ (show (-val1 * val2)))
-                     else subProtoCalc newxs (newoutxs ++ (show (val1 * val2)))
+                     else subProtoCalc newxs (init newoutxs ++ "+" ++ (show (val1 * val2)))
     | x == '/' = 
         if head xs /= '-'
         then let val1 = read . reverse . takeBack . reverse $ outxs
@@ -114,7 +114,7 @@ subProtoCalc (x:xs) outxs
                 then subProtoCalc newxs (newoutxs ++ (show (-val1 `div` val2)))
                 else if last newoutxs /= '-'
                     then subProtoCalc newxs (init newoutxs ++ (show (-val1 `div` val2)))
-                    else subProtoCalc newxs (newoutxs ++ (show (val1 `div` val2)))
+                    else subProtoCalc newxs (init newoutxs ++ "+" ++ (show (val1 `div` val2)))
     | otherwise = subProtoCalc xs (outxs ++ [x])
 
 clearMinus :: [Char] -> [Char]
