@@ -109,6 +109,13 @@ subProtoCalc (x:xs) outxs
              in subProtoCalc newxs (newoutxs ++ (show (-val1 `div` val2)))
     | otherwise = subProtoCalc xs (outxs ++ [x])
 
+clearMinus :: [Char] -> Int -> [Char]
+clearMinus (x:xs) n
+    | x /= '-' = if n `mod` 2 /= 0
+                 then  '-':x:xs
+                 else x:xs
+    | otherwise = clearMinus xs (n + 1)
+
 subProtoCalc2 :: [Char] -> [Char] -> Int -> [Char]
 subProtoCalc2 [] outxs _ = outxs
 subProtoCalc2 (x:xs) outxs n
