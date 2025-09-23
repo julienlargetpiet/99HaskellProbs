@@ -63,7 +63,7 @@ subCalc xs ids nums =
 
 protoCalc :: [Char] -> [Char]
 protoCalc xs = 
-    let outxs = subProtoCalc2 (subProtoCalc xs []) []
+    let outxs = subProtoCalc2 (subProtoCalc xs []) [] 0
     in outxs
 
 takeBack :: [Char] -> [Char]
@@ -82,35 +82,49 @@ subProtoCalc :: [Char] -> [Char] -> [Char]
 subProtoCalc [] outxs = outxs
 subProtoCalc (x:xs) outxs
     | x == '*' = 
-        let val1 = read . reverse . takeBack . reverse $ outxs
-            val2 = read . takeBack $ xs
-            newoutxs = reverse . takeTailN . reverse $ outxs
-            newxs = takeTailN xs
-        in subProtoCalc newxs (newoutxs ++ (show (val1 * val2)))
+        if head xs /= '-'
+        then let val1 = read . reverse . takeBack . reverse $ outxs
+                 val2 = read . takeBack $ xs
+                 newoutxs = reverse . takeTailN . reverse $ outxs
+                 newxs = takeTailN xs
+             in subProtoCalc newxs (newoutxs ++ (show (val1 * val2)))
+        else let xsb = tail xs
+                 val1 = read . reverse . takeBack . reverse $ outxs
+                 val2 = read . takeBack $ xsb
+                 newoutxs = reverse . takeTailN . reverse $ outxs
+                 newxs = takeTailN xsb
+             in subProtoCalc newxs (newoutxs ++ (show (-val1 * val2)))
     | x == '/' = 
-        let val1 = read . reverse . takeBack . reverse $ outxs
-            val2 = read . takeBack $ xs
-            newoutxs = reverse . takeTailN . reverse $ outxs
-            newxs = takeTailN xs
-        in subProtoCalc newxs (newoutxs ++ (show (val1 `div` val2)))
+        if head xs /= '-'
+        then let val1 = read . reverse . takeBack . reverse $ outxs
+                 val2 = read . takeBack $ xs
+                 newoutxs = reverse . takeTailN . reverse $ outxs
+                 newxs = takeTailN xs
+             in subProtoCalc newxs (newoutxs ++ (show (val1 `div` val2)))
+        else let xsb = tail xs
+                 val1 = read . reverse . takeBack . reverse $ outxs
+                 val2 = read . takeBack $ xsb
+                 newoutxs = reverse . takeTailN . reverse $ outxs
+                 newxs = takeTailN xsb
+             in subProtoCalc newxs (newoutxs ++ (show (-val1 `div` val2)))
     | otherwise = subProtoCalc xs (outxs ++ [x])
 
-subProtoCalc2 :: [Char] -> [Char] -> [Char]
-subProtoCalc2 [] outxs = outxs
-subProtoCalc2 (x:xs) outxs
+subProtoCalc2 :: [Char] -> [Char] -> Int -> [Char]
+subProtoCalc2 [] outxs _ = outxs
+subProtoCalc2 (x:xs) outxs n
     | x == '+' = 
         let val1 = read . reverse . takeBack . reverse $ outxs
             val2 = read . takeBack $ xs
             newoutxs = reverse . takeTailN . reverse $ outxs
             newxs = takeTailN xs
-        in subProtoCalc2 newxs (newoutxs ++ (show (val1 + val2)))
-    | x == '-' = 
+        in subProtoCalc2 newxs (newoutxs ++ (show (val1 + val2))) (n + 1)
+    | x == '-' && n /= 0 = 
         let val1 = read . reverse . takeBack . reverse $ outxs
             val2 = read . takeBack $ xs
             newoutxs = reverse . takeTailN . reverse $ outxs
             newxs = takeTailN xs
-        in subProtoCalc2 newxs (newoutxs ++ (show (val1 - val2)))
-    | otherwise = subProtoCalc2 xs (outxs ++ [x])
+        in subProtoCalc2 newxs (newoutxs ++ (show (val1 - val2))) (n + 1)
+    | otherwise = subProtoCalc2 xs (outxs ++ [x]) (n + 1)
 
 
 parserPar :: [Char] -> ([Int], [Int])
@@ -2606,32 +2620,28 @@ updateOperators ((x, _):xs) (op:ops) outops =
 --    in formulas
 --    where l = length nbs - 1
 
-evaluateFormula :: [([Char], [[Char]])] -> [([Char], [[Char]])] 
-                  -> [Char] -> ([Char], [Char])
-evaluateFormula [(x, _)] [(x2, _)] ops = (x2, protoCalc x)
-evaluateFormula xs xs2 ops = 
+evaluateFormula :: [([Char], [[Char]])] -> [Char] -> [Char]
+evaluateFormula [(x, _)] ops = x
+evaluateFormula xs ops = 
     let depthxs = map (\(_, l) -> length l) xs
         maxval = myMax depthxs
         idx = grep2 maxval depthxs
         (x, lst) = (xs !! idx)
-        newx = protoCalc x
         newlst = init lst
-        ((x2, _), opidx) = case find (\((_, lval), _) -> lval == newlst) (zip xs [0..(length xs - 1)]) of
-                      Just x -> x
-                      Nothing -> (("", [""]), 0)
-        newx2 = if opidx < idx
-                then x2 ++ [(ops !! opidx)] ++ newx
-                else newx ++ [(ops !! idx)] ++ x2
-        newx2b = if opidx < idx
-                then x2 ++ [(ops !! opidx)] ++ "(" ++ x ++ ")"
-                else "(" ++ x ++ ")" ++ [(ops !! idx)] ++ x2
-        newxs = updateListElem xs opidx (newx2, newlst)
-        newxs2 = deleteListElem newxs idx
-        newxsb = updateListElem xs2 opidx (newx2b, newlst)
-        newxsb2 = deleteListElem newxsb idx
-        newops = updateOperators newxs2 ops []
-    in evaluateFormula newxs2 newxsb2 newops
-
+    in  case find (\((_, lval), _) -> lval == newlst) (zip xs [0..(length xs - 1)]) of
+                      Just xout -> 
+                          let ((x2, _), opidx) = xout
+                              (newx2, newops) = if opidx < idx
+                                      then (x2 ++ [(ops !! opidx)] ++ "(" ++ x ++ ")"
+                                            ,deleteListElem ops opidx)
+                                      else ("(" ++ x ++ ")" ++ [(ops !! idx)] ++ x2
+                                            ,deleteListElem ops idx)
+                              newxs = updateListElem xs opidx (newx2, newlst)
+                              newxs2 = deleteListElem newxs idx
+                          in evaluateFormula newxs2 newops
+                      Nothing -> let newxs = updateListElem xs idx (x, newlst)
+                                 in evaluateFormula newxs ops
+        
 createFormula2 :: [([[Char]], [[Char]])] -> [Char] -> [([Char], [[Char]])]
 createFormula2 [] _ = []
 createFormula2 ((x, n):xs) (op:ops)
