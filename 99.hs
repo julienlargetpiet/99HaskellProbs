@@ -2638,7 +2638,7 @@ createFormula2 ((x, n):xs) (op:ops)
     | length x == 1 = [((x !! 0), n)] ++ createFormula2 xs ops
     | otherwise     = 
         let (newx, newops) = subCreateFormula2 (op:ops) x
-        in [(newx, n)] ++ createFormula2 xs newops
+        in [(newx, n)] ++ createFormula2 xs (tail newops)
 
 subCreateFormula2 :: [Char] -> [[Char]] -> ([Char], [Char])
 subCreateFormula2 ops (x:xs) = subCreateFormula2b ops xs x
