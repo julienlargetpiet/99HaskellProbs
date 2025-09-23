@@ -93,7 +93,11 @@ subProtoCalc (x:xs) outxs
                  val2 = read . takeBack $ xsb
                  newoutxs = reverse . takeTailN . reverse $ outxs
                  newxs = takeTailN xsb
-             in subProtoCalc newxs (newoutxs ++ (show (-val1 * val2)))
+             in  if null newoutxs
+                 then subProtoCalc newxs (newoutxs ++ (show (-val1 * val2)))
+                 else if last newoutxs /= '-'
+                     then subProtoCalc newxs (init newoutxs ++ (show (-val1 * val2)))
+                     else subProtoCalc newxs (newoutxs ++ (show (val1 * val2)))
     | x == '/' = 
         if head xs /= '-'
         then let val1 = read . reverse . takeBack . reverse $ outxs
@@ -106,15 +110,22 @@ subProtoCalc (x:xs) outxs
                  val2 = read . takeBack $ xsb
                  newoutxs = reverse . takeTailN . reverse $ outxs
                  newxs = takeTailN xsb
-             in subProtoCalc newxs (newoutxs ++ (show (-val1 `div` val2)))
+             in if null newoutxs
+                then subProtoCalc newxs (newoutxs ++ (show (-val1 `div` val2)))
+                else if last newoutxs /= '-'
+                    then subProtoCalc newxs (init newoutxs ++ (show (-val1 `div` val2)))
+                    else subProtoCalc newxs (newoutxs ++ (show (val1 `div` val2)))
     | otherwise = subProtoCalc xs (outxs ++ [x])
 
-clearMinus :: [Char] -> Int -> [Char]
-clearMinus (x:xs) n
+clearMinus :: [Char] -> [Char]
+clearMinus xs = subClearMinus xs 0
+
+subClearMinus :: [Char] -> Int -> [Char]
+subClearMinus (x:xs) n
     | x /= '-' = if n `mod` 2 /= 0
                  then  '-':x:xs
                  else x:xs
-    | otherwise = clearMinus xs (n + 1)
+    | otherwise = subClearMinus xs (n + 1)
 
 subProtoCalc2 :: [Char] -> [Char] -> Int -> [Char]
 subProtoCalc2 [] outxs _ = outxs
@@ -124,13 +135,23 @@ subProtoCalc2 (x:xs) outxs n
             val2 = read . takeBack $ xs
             newoutxs = reverse . takeTailN . reverse $ outxs
             newxs = takeTailN xs
-        in subProtoCalc2 newxs (newoutxs ++ (show (val1 + val2))) (n + 1)
+        in if null newoutxs 
+           then subProtoCalc2 newxs (newoutxs ++ (show (val1 + val2))) (n + 1)
+           else if last newoutxs /= '-'
+           then subProtoCalc2 newxs (newoutxs ++ (show (val1 + val2))) (n + 1)
+           else if val1 > val2
+                then subProtoCalc2 newxs (newoutxs ++ (show (val1 - val2))) (n + 1)
+                else subProtoCalc2 newxs (init newoutxs ++ (show (val2 - val1))) (n + 1)
     | x == '-' && n /= 0 = 
         let val1 = read . reverse . takeBack . reverse $ outxs
             val2 = read . takeBack $ xs
             newoutxs = reverse . takeTailN . reverse $ outxs
             newxs = takeTailN xs
-        in subProtoCalc2 newxs (newoutxs ++ (show (val1 - val2))) (n + 1)
+        in if null newoutxs 
+           then subProtoCalc2 newxs (newoutxs ++ (show (val1 - val2))) (n + 1)
+           else if last newoutxs /= '-'
+           then subProtoCalc2 newxs (newoutxs ++ (show (val1 - val2))) (n + 1)
+           else subProtoCalc2 newxs (newoutxs ++ (show (val1 + val2))) (n + 1)
     | otherwise = subProtoCalc2 xs (outxs ++ [x]) (n + 1)
 
 
