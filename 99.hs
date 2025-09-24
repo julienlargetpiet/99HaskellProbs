@@ -2667,8 +2667,9 @@ evaluateFormula xs ops =
                               newxs = updateListElem xs opidx (newx2, newlst)
                               newxs2 = deleteListElem newxs idx
                           in evaluateFormula newxs2 newops
-                      Nothing -> let newxs = updateListElem xs idx (x, newlst)
-                                 in evaluateFormula newxs ops
+                      Nothing -> ""
+                      --let newxs = updateListElem xs idx (x, newlst)
+                                 --in evaluateFormula newxs ops
         
 createFormula2 :: [([[Char]], [[Char]])] -> [Char] -> [([Char], [[Char]])]
 createFormula2 [] _ = []
