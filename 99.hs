@@ -2525,7 +2525,7 @@ subHowAdd2 cmp n n2 outxs
 
 -- 93, another approach that includes parenthesis order
           
-data PTree a = PNode a [[PTree a]] deriving Show
+data PTree a = PNode a [[PTree a]] deriving (Show, Eq)
 
 howAddIntricated :: [[Int]] -> [[PTree Int]]
 howAddIntricated []= []
@@ -2535,30 +2535,26 @@ howAddIntricated (xs:xss) =
                    else PNode x ((howAddIntricated (howAdd x)))) xs
     in [outxs] ++ howAddIntricated xss
 
-examplePTree :: [[PTree Int]]
-examplePTree = [
-    [PNode 1 [],PNode 1 [],PNode 1 [],PNode 1 []],
-    [PNode 2 [[PNode 1 [],PNode 1 []]], PNode 2 [[PNode 1 [],PNode 1 []]]],
-    [PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 [],PNode 1 []],
-    [PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],
-    [PNode 1 [],PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]],
-    [PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []],
-              [PNode 2 [[PNode 1 [], PNode 1 []]],PNode 1 []],
-              [PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]],
-        PNode 1 []],
-  [PNode 1 [], 
-        PNode 3 [
-                  [PNode 1 [],PNode 1 [],PNode 1 []],
-                  [PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],
-                  [PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]]]]
+expandRoot :: Int -> PTree Int
+expandRoot n = PNode n (map (map expandNode) (howAdd n))
 
-examplePTree2 :: PTree Int
-examplePTree2 = PNode 4 [[PNode 1 [],PNode 1 [],PNode 1 [], PNode 1 []],
+expandNode :: Int -> PTree Int
+expandNode 1 = PNode 1 []
+expandNode x = PNode x (map (map expandNode) (howAdd x))
+
+--PNode 4 [[PNode 1 [],PNode 1 [],PNode 1 [],PNode 1 []],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 2 [[PNode 1 [],PNode 1 []]]],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 [],PNode 1 []],[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],[PNode 1 [],PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]],[PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]],PNode 1 []],[PNode 1 [],PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]]]]
+
+-- ideally we want a data structure like this, so a set of all possible configurations data, the configuration data are then properly used for creating the formulas that will be calculated with the `calc` function, but unfortunately the `howIntricated functions, gives a set of configurations data, but also, if node strictly superior to 3, again a set of configurations data, which is not intended`. We do not want intrication of configurations data, wa want a set of configurations data from which other functions can calculate directly
+
+examplePTree :: PTree Int
+examplePTree = PNode 4 [[PNode 1 [],PNode 1 [],PNode 1 [], PNode 1 []],
               [PNode 2 [[PNode 1 [], PNode 1 []]],PNode 1 [], PNode 1 []],
               [PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]], PNode 1 []],
               [PNode 1 [], PNode 1 [], PNode 2 [[PNode 1 [], PNode 1 []]]],
               [PNode 2 [[PNode 1 [], PNode 1 []]], PNode 2 [[PNode 1 [], PNode 1 []]]],
               [PNode 3 [[PNode 2 [[PNode 1 [], PNode 1 []]]], [PNode 1 []]], 
+                        PNode 1 []],
+              [PNode 3 [[PNode 1 [], PNode 1 [], PNode 1 []]], 
                         PNode 1 []],
               [PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]], 
                         PNode 1 []],
@@ -2566,60 +2562,6 @@ examplePTree2 = PNode 4 [[PNode 1 [],PNode 1 [],PNode 1 [], PNode 1 []],
                   PNode 3 [[PNode 2 [[PNode 1 [], PNode 1 []]]], [PNode 1 []]]],
               [PNode 1 [], 
                   PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]]]
-
-examplePTree3 :: PTree Int
-examplePTree3 = PNode 3 [[PNode 2 [[PNode 1 [], PNode 1 []]]], [PNode 1 []]]
-
-examplePTree3b :: PTree Int
-examplePTree3b = PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]
-
-examplePTree4 :: PTree Int
-examplePTree4 = PNode 3 [[PNode 1 [], PNode 1 [], PNode 1 []]]
-
-examplePTree4b :: PTree Int
-examplePTree4b = PNode 2 [[PNode 1 [], PNode 1 []]]
-
-examplePTree5 :: PTree Int
-examplePTree5 = PNode 4 [[PNode 1 []], [PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]]]
-
-ex5c :: PTree Int
-ex5c = PNode 4 [[PNode 2 [[PNode 1 [], PNode 1 []]]], [PNode 1 []], [PNode 1 []]]
-
-examplePTree5b :: PTree Int
-examplePTree5b = PNode 4 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]], [PNode 1 []]]
-
-examplePTree6 :: PTree Int
-examplePTree6 = PNode 5 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]], [PNode 2 [[PNode 1 [], PNode 1 []]]]]
-
-examplePTree7 :: PTree Int
-examplePTree7 = PNode 6 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]], [PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]]]
-
-examplePTree7b :: PTree Int
-examplePTree7b = PNode 6 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]], PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]]]
-
-exval :: [([Char], [[Char]])]
-exval = 
-    let outxs = calculatePTree examplePTree7 ["81", "7", "55", "65", "32", "28"] [0..5] []
-        outxs2 = createFormula2 outxs "+-+*+"
-    in outxs2
-
-exval2 :: [([Char], [[Char]])]
-exval2 = 
-    let (PNode _ curtrees) = examplePTree2
-        curtree = curtrees !! 0
-        curtree2 = map (\x -> [x]) curtree
-        outxs = calculatePTree (PNode 4 curtree2) ["81", "7", "55", "65"] [0..3] []
-        outxs2 = createFormula2 outxs "+-+*+"
-    in outxs2
-
-exval3 :: [([Char], [[Char]])]
-exval3 = 
-    let (PNode _ curtrees) = examplePTree2
-        curtree = curtrees !! 2
-        curtree2 = map (\x -> [x]) curtree
-        outxs = calculatePTree (PNode 4 curtree2) ["33", "12", "11", "9"] [0..3] []
-        outxs2 = createFormula2 outxs "+-+*+"
-    in outxs2
 
 subDividing :: [Int] -> [Int] -> Int -> [[Int]]
 subDividing _ [] _ = []
@@ -2667,7 +2609,8 @@ updateOperators ((x, _):xs) (op:ops) outops =
 --           , (val1, val2) <- subPuzzle nbs curops refptree,
 --           val2 == rslt]
 
---[PNode 1 [],PNode 4 [[PNode 1 [],PNode 1 [],PNode 1 [],PNode 1 []],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 2 [[PNode 1 [],PNode 1 []]]],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 [],PNode 1 []],[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],[PNode 1 [],PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]],[PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]],PNode 1 []],[PNode 1 [],PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]]]]]
+--realConfigurations :: [PTree Int] -> [[Int]]
+--realConfigurations xs = 
 
 subPuzzle :: [[Char]] -> [Char] -> (PTree Int) -> [([Char], [Char])]
 subPuzzle nbs ops (PNode x restxs) =
@@ -2676,7 +2619,7 @@ subPuzzle nbs ops (PNode x restxs) =
                                outxs2 = createFormula2 outxs ops
                                newops = updateOperators outxs2 ops []
                                newformula = evaluateFormula outxs2 newops
-                           in (newformula, "")) restxs
+                           in (newformula, calc newformula)) restxs
     in outv
     where l = length nbs - 1
 
