@@ -2582,6 +2582,9 @@ examplePTree4b = PNode 2 [[PNode 1 [], PNode 1 []]]
 examplePTree5 :: PTree Int
 examplePTree5 = PNode 4 [[PNode 1 []], [PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]]]
 
+ex5c :: PTree Int
+ex5c = PNode 4 [[PNode 2 [[PNode 1 [], PNode 1 []]]], [PNode 1 []], [PNode 1 []]]
+
 examplePTree5b :: PTree Int
 examplePTree5b = PNode 4 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]], [PNode 1 []]]
 
@@ -2590,6 +2593,33 @@ examplePTree6 = PNode 5 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 
 
 examplePTree7 :: PTree Int
 examplePTree7 = PNode 6 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]], [PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]]]
+
+examplePTree7b :: PTree Int
+examplePTree7b = PNode 6 [[PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]], PNode 3 [[PNode 1 []], [PNode 2 [[PNode 1 [], PNode 1 []]]]]]]
+
+exval :: [([Char], [[Char]])]
+exval = 
+    let outxs = calculatePTree examplePTree7 ["81", "7", "55", "65", "32", "28"] [0..5] []
+        outxs2 = createFormula2 outxs "+-+*+"
+    in [("", [])] ++ outxs2
+
+exval2 :: [([Char], [[Char]])]
+exval2 = 
+    let (PNode _ curtrees) = examplePTree2
+        curtree = curtrees !! 0
+        curtree2 = map (\x -> [x]) curtree
+        outxs = calculatePTree (PNode 4 curtree2) ["81", "7", "55", "65"] [0..3] []
+        outxs2 = createFormula2 outxs "+-+*+"
+    in [("", [])] ++ outxs2
+
+exval3 :: [([Char], [[Char]])]
+exval3 = 
+    let (PNode _ curtrees) = examplePTree2
+        curtree = curtrees !! 1
+        curtree2 = map (\x -> [x]) curtree
+        outxs = calculatePTree (PNode 4 curtree2) ["81", "7", "55", "65"] [0..3] []
+        outxs2 = createFormula2 outxs "+-+*+"
+    in [("", [])] ++ outxs2
 
 subDividing :: [Int] -> [Int] -> Int -> [[Int]]
 subDividing _ [] _ = []
@@ -2629,33 +2659,36 @@ updateOperators ((x, _):xs) (op:ops) outops =
               else updateOperators xs (tail newops) (outops ++ [head newops])
        else updateOperators xs ops (outops ++ [op])
 
---puzzle :: Int -> [Char] -> [Char] -> [[Char]]
+--puzzle :: [Char] -> [[Char]] -> [Char] -> [[Char]]
 --puzzle rslt nbs ops = 
 --    let outhowadd = howAdd (length nbs)
 --        refptree = howAddIntricated outhowadd
 --    in concat [val1 | curops <- sequence (rep (length ops) ops)
 --           , (val1, val2) <- subPuzzle nbs curops refptree,
 --           val2 == rslt]
---
---subPuzzle :: [Char] -> [Char] -> (PTree Int) -> [([Char], Int)]
---subPuzzle nbs ops (PNode x restxs) =
---    let formulas = map (\xs -> 
---        let outxs = calculatePTree (PNode x [xs]) nbs [0..l] 0
---            outxs2 = createFormula2 outxs ops
---            newops = updateOperators outxs2 ops []
---            newrslt = evaluateFormula outxs3 newops
---        in (newformula, newrslt)) restxs
---    in formulas
---    where l = length nbs - 1
+
+subPuzzle :: [[Char]] -> [Char] -> (PTree Int) -> [([Char], [Char])]
+subPuzzle nbs ops (PNode x restxs) =
+    let outv = map (\xs -> let newxs = map (\valx -> [valx]) xs
+                               outxs = calculatePTree (PNode x newxs) nbs [0..l] []
+                               outxs2 = createFormula2 outxs ops
+                               newops = updateOperators outxs2 ops []
+                               outxs3 = [("", [])] ++ outxs2
+                               newformula = evaluateFormula outxs3 (" " ++ newops)
+                           in (newformula, "")) restxs
+    in outv
+    where l = length nbs - 1
 
 evaluateFormula :: [([Char], [[Char]])] -> [Char] -> [Char]
-evaluateFormula [(x, _)] ops = getRangeList x [1..(length x - 1)]
+evaluateFormula [(x, _)] ops = x
 evaluateFormula xs ops = 
     let depthxs = map (\(_, l) -> length l) xs
         maxval = myMax depthxs
-        idx = grep2 maxval depthxs
+        idx = (grep2 maxval (tail depthxs)) + 1
         (x, lst) = (xs !! idx)
-        newlst = init lst
+        newlst = if null lst
+                 then []
+                 else init lst
     in  case find (\((_, lval), _) -> lval == newlst) (zip xs [0..(length xs - 1)]) of
                       Just xout -> 
                           let ((x2, _), opidx) = xout
@@ -2668,11 +2701,10 @@ evaluateFormula xs ops =
                               newxs2 = deleteListElem newxs idx
                           in evaluateFormula newxs2 newops
                       Nothing -> ""
-                      --let newxs = updateListElem xs idx (x, newlst)
-                                 --in evaluateFormula newxs ops
         
 createFormula2 :: [([[Char]], [[Char]])] -> [Char] -> [([Char], [[Char]])]
 createFormula2 [] _ = []
+createFormula2 [(x1, x2)] [] = [(concat x1, x2)]
 createFormula2 ((x, n):xs) (op:ops)
     | length x == 1 = [((x !! 0), n)] ++ createFormula2 xs ops
     | otherwise     = 
