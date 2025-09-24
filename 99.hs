@@ -2643,13 +2643,13 @@ updateOperators ((x, _):xs) (op:ops) outops =
 --        let outxs = calculatePTree (PNode x [xs]) nbs [0..l] 0
 --            outxs2 = createFormula2 outxs ops
 --            newops = updateOperators outxs2 ops []
---            (newformula, newrslt) = evaluateFormula outxs3 newops
+--            newrslt = evaluateFormula outxs3 newops
 --        in (newformula, newrslt)) restxs
 --    in formulas
 --    where l = length nbs - 1
 
 evaluateFormula :: [([Char], [[Char]])] -> [Char] -> [Char]
-evaluateFormula [(x, _)] ops = x
+evaluateFormula [(x, _)] ops = getRangeList x [1..(length x - 1)]
 evaluateFormula xs ops = 
     let depthxs = map (\(_, l) -> length l) xs
         maxval = myMax depthxs
