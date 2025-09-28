@@ -57,7 +57,9 @@ subCalc xs ids nums =
                  else []
         xsbetween = getRangeList xs [(idstrt + 1)..(idstop - 1)]
         rslt = protoCalc xsbetween
-        newxs = xsstrt ++ rslt ++ xsstop
+        newxs = if head rslt /= '-'
+                then xsstrt ++ rslt ++ xsstop
+                else (getRangeList xsstrt [0..(length xsstrt) - 2]) ++ rslt ++ xsstop
         (newids, newnums) = parserPar newxs
     in subCalc newxs newids newnums
 
@@ -2535,14 +2537,93 @@ howAddIntricated (xs:xss) =
                    else PNode x ((howAddIntricated (howAdd x)))) xs
     in [outxs] ++ howAddIntricated xss
 
-expandRoot :: Int -> PTree Int
-expandRoot n = PNode n (map (map expandNode) (howAdd n))
 
-expandNode :: Int -> PTree Int
-expandNode 1 = PNode 1 []
-expandNode x = PNode x (map (map expandNode) (howAdd x))
+howAddIntricated2 :: [[Int]] -> [[PTree Int]]
+howAddIntricated2 [] = []
+howAddIntricated2 (xs:xss) = 
+    let outxs = foldl (\acc x -> if x == 1
+                        then acc ++ [PNode 1 []]
+                        else concatMap (\x2 -> 
+                        acc ++ [PNode x (howAddIntricated2 [x2])]) (howAdd x)) [] xs
+    in [outxs] ++ howAddIntricated2 xss
 
---PNode 4 [[PNode 1 [],PNode 1 [],PNode 1 [],PNode 1 []],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 2 [[PNode 1 [],PNode 1 []]]],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 [],PNode 1 []],[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],[PNode 1 [],PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]],[PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]],PNode 1 []],[PNode 1 [],PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []],[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]]]]
+--[[PNode 1 [],PNode 1 [],PNode 1 [],PNode 1 []],
+-- [PNode 2 [[PNode 1 [],PNode 1 []]],PNode 2 [[PNode 1 [],PNode 1 []]]],
+-- [PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 [],PNode 1 []],
+-- [PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []],
+-- [PNode 1 [],PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]],
+-- [PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []]],PNode 3 [[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []]],PNode 3 [[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]],PNode 1 []],
+-- [PNode 1 [],PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []]],
+-- PNode 1 [],PNode 3 [[PNode 2 [[PNode 1 [],PNode 1 []]],PNode 1 []]],
+-- PNode 1 [],PNode 3 [[PNode 1 [],PNode 2 [[PNode 1 [],PNode 1 []]]]]]]
+
+testf :: [Int] -> [[Int]]
+testf [] = []
+testf (x:xs) = (map (\x -> replicate 5 x) [x]) ++ testf xs
+
+testf2 :: [Int] -> [[Int]]
+testf2 [] = []
+testf2 (x:xs) = map (\x -> (replicate 5 x) ++ [0] ++ (concat $ testf2 xs)) [11, 15, 13]
+
+howAddIntricated3 :: [[Int]] -> [PTree Int] -> [[PTree Int]] -> [[PTree Int]]
+howAddIntricated3 ([]:xss) conf confset = if null $ conf
+                                          then howAddIntricated3 xss [] confset
+                                          else howAddIntricated3 xss [] (confset 
+                                               ++ [conf])
+howAddIntricated3 [] _ confset = confset
+howAddIntricated3 (xs:xss) conf confset
+    | all (== 1) xs = if null conf 
+               then howAddIntricated3 ([]:xss) (replicate (length xs) (PNode 1 [])) confset
+               else let [ptree] = conf
+                        newptree = appendLastPTreen ptree (length xs)
+                    in howAddIntricated3 ([]:xss) [newptree] confset
+    | otherwise = if null conf 
+                  then let (newx, ptree) = untilNotOne xs []
+                       in map (\x2 -> concat $ (howAddIntricated3 [x2] (ptree 
+                                                     ++ [PNode newx []]) []) ++
+                       (howAddIntricated3 (xs:xss) conf confset)) (howAdd newx)
+                  else let [ptree] = conf
+                           (newx, ptree2) = untilNotOne xs []
+                           newptree2 = if length ptree2 == 0
+                                       then appendLastPTree ptree newx
+                                       else let newptree = appendLastPTreen ptree (length ptree2)
+                                            in appendLastPTree2 newptree newx
+                       in map (\x2 -> concat $ (howAddIntricated3 [x2] [newptree2] []) ++
+                       (howAddIntricated3 (xs:xss) [] confset)) (howAdd newx)
+
+howAddIntricatedNotGood :: [Int] -> [[PTree Int]]
+howAddIntricatedNotGood [] = [[]]
+howAddIntricatedNotGood (x:xs)
+    | all (== 1) (x:xs) = [replicate (length xs + 1) (PNode 1 [])]
+    | otherwise = map (\x2 -> [PNode x [concat $ (howAddIntricatedNotGood x2) 
+                                          ++ (howAddIntricatedNotGood xs)]]) (howAdd x)
+
+untilNotOne :: [Int] -> [PTree Int] -> (Int, [PTree Int])
+untilNotOne (x:xs) outxs
+    | x == 1 = untilNotOne xs (outxs ++ [PNode 1 []])
+    | otherwise = (x, outxs)
+
+appendLastPTree :: PTree Int -> Int -> PTree Int
+appendLastPTree (PNode vl []) x = PNode vl [[PNode x []]]
+appendLastPTree (PNode vl restvl) x = PNode vl [[appendLastPTree (head . head $ restvl) x]]
+
+appendLastPTree2 :: PTree Int -> Int -> PTree Int
+appendLastPTree2 (PNode vl restvl) x = 
+    let restvl2 = head restvl
+    in if all (\(PNode x2 _) -> x2 == 1) restvl2
+       then PNode vl (restvl ++ [[PNode x []]])
+       else PNode vl [[appendLastPTree2 (head restvl2) x]]
+
+appendLastPTreen :: PTree Int -> Int -> PTree Int
+appendLastPTreen (PNode vl []) n = PNode vl [replicate n (PNode 1 [])]
+appendLastPTreen (PNode vl restvl) n = PNode vl [[appendLastPTreen (head . head $ restvl) n]]
+
+--[[PNode 3 [[PNode 1 [],PNode 1 [],PNode 1 []]]],
+-- [PNode 3 [[PNode 2 [[PNode 1 [],PNode 1 []]]]]],
+-- [PNode 1 []]]
+
+testt2 :: PTree Int
+testt2 = PNode 3 []
 
 -- ideally we want a data structure like this, so a set of all possible configurations data, the configuration data are then properly used for creating the formulas that will be calculated with the `calc` function, but unfortunately the `howIntricated functions, gives a set of configurations data, but also, if node strictly superior to 3, again a set of configurations data, which is not intended`. We do not want intrication of configurations data, wa want a set of configurations data from which other functions can calculate directly
 
