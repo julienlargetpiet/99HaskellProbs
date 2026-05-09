@@ -1,0 +1,440 @@
+import Text.ParserCombinators.ReadP
+
+data Weird = A | B
+    deriving Show
+
+instance Read Weird where
+    readsPrec _ input =
+        readP_to_S parser input
+      where
+        parser =
+            (char 'x' >> return A)
+            +++
+            (char 'x' >> return B)
+
+
+-- Réflexion durant une seconde
+-- 
+-- Yes, exactly:
+-- 
+-- data Weird = A | B
+--     deriving Show
+-- 
+-- defines a new type Weird whose values can be either:
+-- 
+-- A
+-- B
+-- 
+-- So:
+-- 
+-- A :: Weird
+-- B :: Weird
+-- 
+-- A and B are constructors.
+-- 
+-- deriving Show means Haskell automatically knows how to convert them to strings for printing:
+-- 
+-- show A
+-- -- "A"
+-- 
+-- show B
+-- -- "B"
+-- 
+-- Without deriving Show, GHCi could not display values of type Weird.
+-- 
+-- Now this part:
+-- 
+-- instance Read Weird where
+--     readsPrec _ =
+--         readP_to_S $
+--             (char 'x' >> return A)
+--             +++
+--             (char 'x' >> return B)
+-- 
+-- means:
+-- 
+-- I am teaching Haskell how to parse a String into a value of type Weird.
+-- 
+-- The Read typeclass is the opposite-ish of Show.
+-- 
+-- show :: Show a => a -> String
+-- read :: Read a => String -> a
+-- reads :: Read a => String -> [(a, String)]
+-- 
+-- So when you write:
+-- 
+-- reads "xhello" :: [(Weird, String)]
+-- 
+-- Haskell looks for:
+-- 
+-- instance Read Weird where ...
+-- 
+-- and uses your custom parsing logic.
+-- 
+-- readsPrec _ = ...
+-- 
+-- A Read instance usually defines this method:
+-- 
+-- readsPrec :: Int -> String -> [(a, String)]
+-- 
+-- For your type:
+-- 
+-- readsPrec :: Int -> String -> [(Weird, String)]
+-- 
+-- The Int is a precedence level. It matters for parsing things with infix constructors, but for your example we do not care about precedence.
+-- 
+-- So we ignore it with _:
+-- 
+-- readsPrec _ = ...
+-- 
+-- That means:
+-- 
+-- Whatever precedence value Haskell gives me, I do not use it.
+-- 
+-- So this:
+-- 
+-- readsPrec _ =
+--     readP_to_S $
+--         ...
+-- 
+-- means:
+-- 
+-- My parser for Weird is this parser converted into the readsPrec format.
+-- 
+-- ReadP
+-- 
+-- This import:
+-- 
+-- import Text.ParserCombinators.ReadP
+-- 
+-- gives you a small parser-combinator library.
+-- 
+-- A ReadP a is basically a parser that reads from a String and produces a value of type a.
+-- 
+-- So:
+-- 
+-- char 'x'
+-- 
+-- has type approximately:
+-- 
+-- char 'x' :: ReadP Char
+-- 
+-- It means:
+-- 
+-- Parse exactly the character 'x'.
+-- 
+-- Example mentally:
+-- 
+-- char 'x'
+-- 
+-- on input:
+-- 
+-- "xhello"
+-- 
+-- succeeds and consumes 'x', leaving:
+-- 
+-- "hello"
+-- 
+-- On input:
+-- 
+-- "abc"
+-- 
+-- it fails.
+-- 
+-- char 'x' >> return A
+-- 
+-- This is the key part.
+-- 
+-- char 'x' >> return A
+-- 
+-- means:
+-- 
+-- First parse the character 'x'. Then ignore the parsed character and return the value A.
+-- 
+-- The operator:
+-- 
+-- >>
+-- 
+-- means “do the left action, throw away its result, then do the right action.”
+-- 
+-- So:
+-- 
+-- char 'x' >> return A
+-- 
+-- is a parser of type:
+-- 
+-- ReadP Weird
+-- 
+-- It consumes an 'x', then produces:
+-- 
+-- A
+-- 
+-- Similarly:
+-- 
+-- char 'x' >> return B
+-- 
+-- also consumes an 'x', but produces:
+-- 
+-- B
+-- 
+-- So you have two parsers:
+-- 
+-- (char 'x' >> return A) :: ReadP Weird
+-- (char 'x' >> return B) :: ReadP Weird
+-- 
+-- Both accept the same input.
+-- 
+-- +++
+-- 
+-- This combines two parsers as alternatives:
+-- 
+-- p1 +++ p2
+-- 
+-- means:
+-- 
+-- Try parser p1, and also parser p2. Return possible successful parses.
+-- 
+-- So this:
+-- 
+-- (char 'x' >> return A)
+-- +++
+-- (char 'x' >> return B)
+-- 
+-- means:
+-- 
+-- If the input starts with 'x', one possible result is A, and another possible result is B.
+-- 
+-- That is why it is ambiguous.
+-- 
+-- On input:
+-- 
+-- "xhello"
+-- 
+-- both parsers succeed:
+-- 
+-- char 'x' >> return A
+-- -- produces A, leaves "hello"
+-- 
+-- char 'x' >> return B
+-- -- produces B, leaves "hello"
+-- 
+-- So the combined parser has two valid results.
+-- 
+-- readP_to_S
+-- 
+-- This converts a ReadP parser into a normal function from String to parse results.
+-- 
+-- Its type is:
+-- 
+-- readP_to_S :: ReadP a -> String -> [(a, String)]
+-- 
+-- For your parser:
+-- 
+-- readP_to_S parser :: String -> [(Weird, String)]
+-- 
+-- So:
+-- 
+-- readP_to_S parser "xhello"
+-- 
+-- returns:
+-- 
+-- [(A,"hello"),(B,"hello")]
+-- 
+-- That matches the readsPrec type:
+-- 
+-- readsPrec :: Int -> String -> [(Weird, String)]
+-- 
+-- Since you wrote:
+-- 
+-- readsPrec _ = readP_to_S parser
+-- 
+-- you are saying:
+-- 
+-- To parse a Weird, use this ReadP parser.
+-- 
+-- Desugared version
+-- 
+-- This:
+-- 
+-- instance Read Weird where
+--     readsPrec _ =
+--         readP_to_S $
+--             (char 'x' >> return A)
+--             +++
+--             (char 'x' >> return B)
+-- 
+-- is equivalent to:
+-- 
+-- instance Read Weird where
+--     readsPrec _ input =
+--         readP_to_S parser input
+--       where
+--         parser =
+--             (char 'x' >> return A)
+--             +++
+--             (char 'x' >> return B)
+-- 
+-- So when you run:
+-- 
+-- reads "xhello" :: [(Weird, String)]
+-- 
+-- Haskell roughly does:
+-- 
+-- readsPrec 0 "xhello" :: [(Weird, String)]
+-- 
+-- then your instance says:
+-- 
+-- readP_to_S parser "xhello"
+-- 
+-- and the result is:
+-- 
+-- [(A,"hello"),(B,"hello")]
+-- Why this proves reads returns a list
+-- 
+-- Because reads is not just “parse one thing or crash.” It is a parser interface that can represent:
+-- 
+-- [] 
+-- -- no parse
+-- 
+-- [(A, "hello")]
+-- -- one possible parse
+-- 
+-- [(A, "hello"), (B, "hello")]
+-- -- multiple possible parses
+-- 
+-- In your calculator case, Double parsing is usually not ambiguous, so you normally see one pair:
+-- 
+-- reads "23.212&SDS" :: [(Double, String)]
+-- -- [(23.212,"&SDS")]
+-- 
+-- But the type is general enough to support ambiguous parsers like Weird.
+-- 
+-- The important mental model is:
+-- 
+-- reads :: Read a => String -> [(a, String)]
+-- 
+-- means:
+-- 
+-- Give me all possible ways to parse a value of type a from the beginning of this string, and for each one also tell me what input remains.
+-- 
+-- It is called:
+-- 
+-- ReadP parser → String-consuming parser function
+-- 
+-- munch is a ReadP parser that consumes as many consecutive characters as possible while a condition is true.
+-- 
+-- Type:
+-- 
+-- munch :: (Char -> Bool) -> ReadP String
+-- 
+-- Example:
+-- 
+-- import Text.ParserCombinators.ReadP
+-- import Data.Char (isDigit)
+-- 
+-- readP_to_S (munch isDigit) "123abc"
+-- -- [("123","abc")]
+-- 
+-- Meaning:
+-- 
+-- It consumed "123" because all those chars are digits.
+-- It stopped at 'a'.
+-- The rest is "abc".
+-- 
+-- Another example:
+-- 
+-- readP_to_S (munch (== 'a')) "aaabc"
+-- -- [("aaa","bc")]
+-- 
+-- Important detail: munch can return an empty string too:
+-- 
+-- readP_to_S (munch isDigit) "abc"
+-- -- [("","abc")]
+-- 
+-- Because “consume zero or more matching characters” is allowed.
+-- 
+-- If you want at least one matching character, use munch1:
+-- 
+-- readP_to_S (munch1 isDigit) "123abc"
+-- -- [("123","abc")]
+-- 
+-- readP_to_S (munch1 isDigit) "abc"
+-- -- []
+-- 
+-- So in tokenizer terms:
+-- 
+-- munch1 (\c -> isDigit c || c == '.')
+-- 
+-- means:
+-- 
+-- parse one or more characters that look like part of a number.
+-- 
+-- It is basically the parser-combinator equivalent of:
+-- 
+-- B.span (\c -> isDigit c || c == '.') bs
+-- 
+-- But B.span splits a ByteString directly, while munch works inside the ReadP parser system.
+--
+
+-- and the retunrn type of readP_to_S is [(A, String)] A is the type we find in the provided parser, which is ReadP A ?
+
+-- Yes — exactly.
+-- 
+-- General type:
+-- 
+-- readP_to_S :: ReadP a -> String -> [(a, String)]
+-- 
+-- So if your parser has type:
+-- 
+-- ReadP a
+-- 
+-- then readP_to_S returns a function:
+-- 
+-- String -> [(a, String)]
+-- 
+-- Examples:
+-- 
+-- char 'x' :: ReadP Char
+-- 
+-- so:
+-- 
+-- readP_to_S (char 'x') :: String -> [(Char, String)]
+-- 
+-- and:
+-- 
+-- readP_to_S (char 'x') "xhello"
+-- -- [('x', "hello")]
+-- 
+-- Another:
+-- 
+-- string "hello" :: ReadP String
+-- 
+-- so:
+-- 
+-- readP_to_S (string "hello") :: String -> [(String, String)]
+-- 
+-- and:
+-- 
+-- readP_to_S (string "hello") "hello world"
+-- -- [("hello", " world")]
+-- 
+-- Your custom one:
+-- 
+-- (char 'x' >> return A) :: ReadP Weird
+-- 
+-- so:
+-- 
+-- readP_to_S (char 'x' >> return A) :: String -> [(Weird, String)]
+-- 
+-- and:
+-- 
+-- readP_to_S (char 'x' >> return A) "xhello"
+-- -- [(A, "hello")]
+-- 
+-- So yes:
+-- 
+-- ReadP A  ->  String -> [(A, String)]
+-- 
+-- where the second String in the pair is always the unconsumed rest of the input.
+--
+

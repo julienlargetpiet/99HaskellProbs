@@ -1,6 +1,10 @@
 import Text.Printf
 import Debug.Trace
 
+factorial :: Int -> Int
+factorial 1 = 1
+factorial n = n * factorial (n - 1)
+
 getRangeList :: [a] -> [Int] -> [a]
 getRangeList [] _ = []
 getRangeList _ [] = []
@@ -88,6 +92,30 @@ subCalc xs ids nums =
         (newids, newnums) = parserPar newxs
     in subCalc newxs newids newnums
 
+--protoCalc :: [Char] -> [Char]
+--protoCalc xs =
+--    let step0 = clearOperator xs
+--
+--        step1 = subProtoCalcIdentity step0 []
+--        step2 = clearOperator step1
+--
+--        step3 = subProtoCalcExponent step2 []
+--        step4 = clearOperator step3
+--
+--        step5 = subProtoCalc step4 []
+--        step6 = clearOperator step5
+--
+--        step7 = subProtoCalc2 step6 [] 0
+--    in trace ("step0 input:    " ++ step0) $
+--       trace ("step1 identity: " ++ step1) $
+--       trace ("step2 clear:    " ++ step2) $
+--       trace ("step3 exponent: " ++ step3) $
+--       trace ("step4 clear:    " ++ step4) $
+--       trace ("step5 */:       " ++ step5) $
+--       trace ("step6 clear:    " ++ step6) $
+--       trace ("step7 +-:       " ++ step7) $
+--       clearOperator step7
+
 protoCalc :: [Char] -> [Char]
 protoCalc xs =
     let step0 = clearOperator xs
@@ -102,15 +130,7 @@ protoCalc xs =
         step6 = clearOperator step5
 
         step7 = subProtoCalc2 step6 [] 0
-    in trace ("step0 input:    " ++ step0) $
-       trace ("step1 identity: " ++ step1) $
-       trace ("step2 clear:    " ++ step2) $
-       trace ("step3 exponent: " ++ step3) $
-       trace ("step4 clear:    " ++ step4) $
-       trace ("step5 */:       " ++ step5) $
-       trace ("step6 clear:    " ++ step6) $
-       trace ("step7 +-:       " ++ step7) $
-       clearOperator step7
+    in clearOperator step7
 
 takeBack2 :: [Char] -> Int -> [Char]
 takeBack2 [] _ = []
@@ -201,8 +221,11 @@ subProtoCalcIdentity (x:xs) outxs
         let val = read $ takeBack2 xs 0 :: Double
             newxs = takeTailN2 xs 0
         in subProtoCalcIdentity newxs (outxs ++ printf "%8f" ((log(val)) :: Double) :: String)
+    | x == '!' = 
+        let val = read $ takeBack2 xs 0 :: Int
+            newxs = takeTailN2 xs 0
+        in subProtoCalcIdentity newxs (outxs ++ show (factorial val))
     | otherwise = subProtoCalcIdentity xs (outxs ++ [x])
-
 
 subProtoCalcExponent :: [Char] -> [Char] -> [Char]
 subProtoCalcExponent [] outxs = outxs
@@ -215,6 +238,18 @@ subProtoCalcExponent (x:xs) outxs
         in subProtoCalcExponent newxs (newoutxs ++ (show (val1**(val2))))
     | otherwise = subProtoCalcExponent xs (outxs ++ [x])
 
+
+benchCalc :: Int -> String -> String
+benchCalc 1 expr = calc expr
+benchCalc n expr =
+    let r = calc expr
+    in r `seq` benchCalc (n - 1) expr
+
+main :: IO ()
+main = do
+    let expr = "-6+-(-7+E-3/0.2)*4"
+    let result = benchCalc 100000 expr
+    putStrLn result
 
 
 
