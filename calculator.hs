@@ -134,7 +134,7 @@ protoCalc xs =
 
 takeBack2 :: [Char] -> Int -> [Char]
 takeBack2 [] _ = []
-takeBack2 (x:xs) n 
+takeBack2 (x:xs) n
     | not (x `elem` "+-*/") = (x:takeBack2 xs (n+1))
     | otherwise = if n == 0 then (x:takeBack2 xs (n+1)) else []
 
@@ -143,6 +143,12 @@ takeTailN2 [] _ = []
 takeTailN2 (x:xs) n
     | not (x `elem` "+-*/") = takeTailN2 xs (n+1)
     | otherwise = if n == 0 then takeTailN2 xs (n+1) else  x:xs
+
+--takeTailN2 :: [Char] -> [Char]
+--takeTailN2 [] = []
+--takeTailN2 (x:xs)
+--    | not (x `elem` "+-*/") = takeTailN2 xs
+--    | otherwise = x:xs
 
 subProtoCalc :: [Char] -> [Char] -> [Char]
 subProtoCalc [] outxs = outxs
@@ -234,7 +240,7 @@ subProtoCalcExponent (x:xs) outxs
         let val1 = read . reverse $ takeBack2 (reverse outxs) 0 :: Double
             val2 = read $ takeBack2 xs 0 :: Double
             newoutxs = reverse $ takeTailN2 (reverse outxs) 0
-            newxs = takeTailN2 xs 0 
+            newxs = takeTailN2 xs 0
         in subProtoCalcExponent newxs (newoutxs ++ (show (val1**(val2))))
     | otherwise = subProtoCalcExponent xs (outxs ++ [x])
 

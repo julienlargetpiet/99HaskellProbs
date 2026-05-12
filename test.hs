@@ -8,9 +8,9 @@ instance Read Weird where
         readP_to_S parser input
       where
         parser =
-            (char 'x' >> return A)
+            (string "France" >> return A)
             +++
-            (char 'x' >> return B)
+            (string "France" >> return B)
 
 
 -- Réflexion durant une seconde

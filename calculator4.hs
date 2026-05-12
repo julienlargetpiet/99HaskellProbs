@@ -72,6 +72,11 @@ tokenize bs0 =
 
 -- Addition & Substraction
 
+parseExpr :: [Token] -> Either String (Double, [Token])
+parseExpr tokens = do
+    (lhs, rest) <- parseTerm tokens
+    parseExprRest lhs rest
+
 parseExprRest :: Double -> [Token] -> Either String (Double, [Token])
 parseExprRest acc tokens =
     case tokens of
@@ -85,7 +90,6 @@ parseExprRest acc tokens =
 
         _ ->
             Right (acc, tokens)
-
 ---------
 
 -- Multiplication & Division
@@ -182,19 +186,6 @@ calc input = do
     tokens <- tokenize input
     parseCalc tokens
 
-
---parseCalc :: [Token] -> Either String Double
---parseCalc tokens = do
---    (result, rest) <- parseExpr tokens --error handled implicitely
---    case rest of
---        [] -> Right result
---        _  -> Left ("Unexpected tokens at end: " ++ show rest)
---
---parseExpr :: [Token] -> Either String (Double, [Token])
---parseExpr tokens = do
---    (lhs, rest) <- parseTerm tokens --error handled implicitely for Left
---    parseExprRest lhs rest
-
 parseCalc :: [Token] -> Either String Double
 parseCalc tokens =
     case parseExpr tokens of
@@ -208,16 +199,6 @@ parseCalc tokens =
 
                 _ ->
                     Left ("Unexpected tokens at end: " ++ show rest)
-
-parseExpr :: [Token] -> Either String (Double, [Token])
-parseExpr tokens = 
-    case parseTerm tokens of
-        Left err -> 
-            Left err
-
-        Right (lhs, rest) ->
-            (parseExprRest lhs rest)
-
 
 benchCalc :: Int -> ByteString -> Either String Double
 benchCalc 1 expr = calc expr
