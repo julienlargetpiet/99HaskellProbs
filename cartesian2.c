@@ -60,46 +60,53 @@ bool get_total_length(
     return true;
 }
 
-size_t *cartesian_indices(
+void cartesian_product_matrix(
+    Matrix2D *mat,
     const size_t *lengths,
-    size_t ndim,
-    size_t *out_rows
+    const size_t *data[],
+    size_t ndim
 ) {
     size_t total = 0;
 
     if (!get_total_length(lengths, ndim, &total)) {
-        return NULL;
+        return;
     }
 
-    *out_rows = total;
-
     if (total == 0) {
-        return NULL;
+        return;
     }
 
     if (ndim == 0) {
-        return NULL;
+        return;
     }
 
     if (total > SIZE_MAX / ndim) {
-        return NULL;
+        return;
     }
 
     size_t n_elems = total * ndim;
 
     if (n_elems > SIZE_MAX / sizeof(size_t)) {
-        return NULL;
+        return;
     }
 
-    size_t *indices = malloc(n_elems * sizeof(*indices));
-    if (indices == NULL) {
-        return NULL;
+    mat->nrows = total;
+    mat->ncols = ndim;
+    mat->data = malloc(n_elems * sizeof(size_t));
+
+    size_t *actual_data = mat->data;
+
+    if (actual_data == NULL) {
+        return;
     }
 
     size_t *cur_indices = calloc(ndim, sizeof(*cur_indices));
     if (cur_indices == NULL) {
-        free(indices);
-        return NULL;
+        free(actual_data);
+        mat->data = NULL;
+        mat->nrows = 0;
+        mat->ncols = 0;
+        return;
     }
 
     size_t row = 0;
@@ -109,7 +116,7 @@ size_t *cartesian_indices(
         const size_t row_idx = ndim * row;
 
         for (size_t i = 0; i < ndim; ++i) {
-            indices[row_idx + i] = cur_indices[i];
+            actual_data[row_idx + i] = data[i][cur_indices[i]];
         }
 
         ++row;
@@ -128,42 +135,6 @@ size_t *cartesian_indices(
     }
 
     free(cur_indices);
-    return indices;
-}
-
-void makeMatrix1(Matrix2D *mat,
-                 const size_t *indices,
-                 const size_t *data,
-                 const size_t nrows,
-                 const size_t ndim,
-                 const size_t data_nrows
-               ) {
-
-    size_t *vec = mat->data;
-
-    for (size_t i = 0; i < nrows; ++i) {
-        const size_t base_pos = i * ndim;
-        for (size_t i2 = 0; i2 < ndim; ++i2) {
-            vec[base_pos + i2] = data[i2 * data_nrows + indices[base_pos + i2]];
-        }
-    }
-}
-
-void makeMatrix2(Matrix2D *mat,
-                 const size_t *indices,
-                 const size_t *data[],
-                 const size_t nrows,
-                 const size_t ndim
-               ) {
-
-    size_t *vec = mat->data;
-
-    for (size_t i = 0; i < nrows; ++i) {
-        const size_t base_pos = i * ndim;
-        for (size_t i2 = 0; i2 < ndim; ++i2) {
-            vec[base_pos + i2] = data[i2][indices[base_pos + i2]];
-        }
-    }
 }
 
 static uint64_t now_ns(void) {
@@ -204,59 +175,20 @@ int main(void) {
 
     const size_t iterations = 100000;
 
-    //const size_t warmup = 1000;
-    //for (size_t i = 0; i < warmup; ++i) {
-    //    size_t rows = 0;
-    //    size_t *indices = cartesian_indices(lengths, ndim, &rows);
-
-    //    if (indices == NULL && rows != 0) {
-    //        fprintf(stderr, "cartesian_indices failed during warmup\n");
-    //        return 1;
-    //    }
-
-    //    Matrix2D mat = matrix_create(rows, ndim);
-    //    makeMatrix1(&mat, 
-    //               indices, 
-    //               data,
-    //               rows,
-    //               ndim,
-    //               lengths[0]);
-
-    //    free(mat.data);
-    //    free(indices);
-    //}
-
     uint64_t start = now_ns();
-
     volatile size_t sink = 0;
 
     for (size_t i = 0; i < iterations; ++i) {
-        size_t rows = 0;
-        size_t *indices = cartesian_indices(lengths, ndim, &rows);
-
-        if (indices == NULL && rows != 0) {
-            fprintf(stderr, "cartesian_indices failed during benchmark\n");
-            return 1;
-        }
-
-        Matrix2D mat = matrix_create(rows, ndim);
-        //makeMatrix1(&mat, 
-        //           indices, 
-        //           data,
-        //           rows,
-        //           ndim,
-        //           lengths[0]);
-        makeMatrix2(&mat, 
-                   indices, 
-                   data2,
-                   rows,
-                   ndim);
+        Matrix2D mat;
+        cartesian_product_matrix(&mat,
+                                 lengths, 
+                                 data2,
+                                 ndim);
 
         sink += mat.data[0];
-        sink += mat.data[rows * ndim - 1];
+        sink += mat.data[mat.nrows * ndim - 1];
 
         free(mat.data);
-        free(indices);
     }
 
     uint64_t end = now_ns();
