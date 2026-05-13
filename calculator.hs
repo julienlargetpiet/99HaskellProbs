@@ -1,5 +1,6 @@
 import Text.Printf
 import Debug.Trace
+import Control.DeepSeq (deepseq)
 
 factorial :: Int -> Int
 factorial 1 = 1
@@ -249,7 +250,7 @@ benchCalc :: Int -> String -> String
 benchCalc 1 expr = calc expr
 benchCalc n expr =
     let r = calc expr
-    in r `seq` benchCalc (n - 1) expr
+    in r `deepseq` benchCalc (n - 1) expr
 
 main :: IO ()
 main = do

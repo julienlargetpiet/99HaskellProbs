@@ -1,6 +1,7 @@
 import qualified Data.ByteString.Char8 as B
 import Data.ByteString.Char8 (ByteString)
 import Data.Char (isDigit, isSpace)
+import Control.DeepSeq (deepseq)
 
 data Token
     = TNum Double
@@ -204,7 +205,7 @@ benchCalc :: Int -> ByteString -> Either String Double
 benchCalc 1 expr = calc expr
 benchCalc n expr =
     let r = calc expr
-    in r `seq` benchCalc (n - 1) expr
+    in r `deepseq` benchCalc (n - 1) expr
 
 main :: IO ()
 main = do

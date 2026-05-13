@@ -4,6 +4,8 @@ import Debug.Trace
 import qualified Data.ByteString.Char8 as B
 import Data.ByteString.Char8 (ByteString)
 
+import Control.DeepSeq (deepseq)
+
 factorial :: Int -> Int
 factorial 1 = 1
 factorial n = n * factorial (n - 1)
@@ -331,7 +333,7 @@ benchCalc :: Int -> ByteString -> ByteString
 benchCalc 1 expr = calc expr
 benchCalc n expr =
     let r = calc expr
-    in r `seq` benchCalc (n - 1) expr
+    in r `deepseq` benchCalc (n - 1) expr
 
 main :: IO ()
 main = do

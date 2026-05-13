@@ -4,7 +4,6 @@ import Control.Monad
 import Control.Monad.ST
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Mutable as M
-import qualified Data.Vector.Mutable as BM
 import qualified Data.Vector as B
 import Control.DeepSeq
 import System.CPUTime

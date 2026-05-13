@@ -72,7 +72,7 @@ benchmarkSequence1 :: [[a]] -> Int -> Int
 benchmarkSequence1 xs 1 = length $ mySequence xs
 benchmarkSequence1 xs n = 
     let r = length $ mySequence xs
-    in r `seq` benchmarkSequence1 xs (n - 1)
+    in r `deepseq` benchmarkSequence1 xs (n - 1)
 
 benchmarkSequence2 :: [[Int]] -> Int -> Int
 benchmarkSequence2 xs 1 =
@@ -99,14 +99,14 @@ benchmarkSequenceNative xs n =
 main :: IO ()
 main =
     let inpt =
-            [ [0,  1,  2,  3,  4]  -- ,5 , 6, 7, 8, 9]
-            , [10, 11, 12, 13, 14]  -- , 14, 15, 16, 17, 18, 19]
-            , [20, 21, 22, 23, 24]  -- , 24, 25, 26, 27, 28, 29]
-            , [30, 31, 32, 33, 34]  -- , 34, 35, 36, 37, 38, 39]
-            , [40, 41, 42, 43, 44]  -- , 44, 45, 46, 47, 48, 49]
+            [ [0,  1,  2,  3,  4]  
+            , [10, 11, 12, 13, 14] 
+            , [20, 21, 22, 23, 24] 
+            , [30, 31, 32, 33, 34] 
+            , [40, 41, 42, 43, 44] 
             ]
         iter = 100000
-    in print $ benchmarkSequence2 inpt iter
+    in print $ benchmarkSequenceNative inpt iter
 
 --main :: IO ()
 --main = 
